@@ -1,8 +1,8 @@
 from edc_constants.constants import POS, NOT_APPLICABLE, DECLINED, NEG, NO, DWTA
 
-from ..models import (
-    HivCareAdherence, ElisaHivResult, HivTestingHistory, HivTestReview,
-    HivResultDocumentation, HivResult, SubjectVisit)
+# from ..models import (
+#     HivCareAdherence, ElisaHivResult, HivTestingHistory, HivTestReview,
+#     HivResultDocumentation, HivResult, SubjectVisit)
 
 
 class ModelValues:

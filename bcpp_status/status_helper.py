@@ -1,12 +1,11 @@
 import sys
 
-from django.apps import apps as django_apps
-
-from edc_constants.constants import (
-    POS, YES, NEG, NO, NAIVE, UNK, IND)
+from edc_constants.constants import POS, YES, NEG, NO, NAIVE, UNK, IND, DEFAULTER, ON_ART
 
 from .model_values import ModelValues
-from .constants import ART_PRESCRIPTION, DEFAULTER, ON_ART
+
+
+ART_PRESCRIPTION = 'ART Prescription'
 
 
 class ValuesSetter:
@@ -17,13 +16,14 @@ class ValuesSetter:
                 setattr(self, attr, value)
 
 
-class SubjectHelper:
+class StatusHelper:
     """A class the determines a number of derived variables around
     HIV status and ART status.
     """
 
-    def __init__(self, visit=None, subject_identifier=None, model_values=None, **kwargs):
-        self._subject_visits = None
+    def __init__(self, subject_visit=None, subject_identifier=None, model_values=None,
+                 **kwargs):
+
         self.documented_pos = None
         self.documented_pos_date = None
         self.final_arv_status = None
@@ -32,17 +32,21 @@ class SubjectHelper:
         self.prev_result = None
         self.prev_result_date = None
         self.prev_result_known = None
+        self.subject_visit_model = subject_visit.__class__
 
-        if visit:
-            self.subject_identifier = visit.subject_identifier
-            self.subject_visit = visit
+        if subject_visit:
+            self.subject_identifier = subject_visit.subject_identifier
+            self.subject_visit = subject_visit
         else:
             self.subject_identifier = subject_identifier
-            self.subject_visit = self.subject_visits.last()
-        self.survey_schedule = self.subject_visit.survey_schedule_object.field_value
+            self.subject_visit = self.subject_visit_model.objects.filter(
+                subject_identifier=self.subject_identifier).order_by('report_datetime').last()
+
+        # self.survey_schedule = self.subject_visit.survey_schedule_object.field_value
         self.visit_schedule_name = self.subject_visit.visit_schedule_name
         self.schedule_name = self.subject_visit.schedule_name
         self.visit_code = self.subject_visit.visit_code
+
         for index, subject_visit in enumerate(self.subject_visits):
             value_setter = ValuesSetter(
                 model_values or ModelValues(subject_visit).__dict__)
@@ -56,6 +60,7 @@ class SubjectHelper:
 #             model_values or ModelValues(self.subject_visit, baseline=True).__dict__)
 #         self.current = ValuesSetter(
 #             model_values or ModelValues(self.subject_visit).__dict__)
+
         if self.current.result_recorded_document == ART_PRESCRIPTION:
             self.current.arv_evidence = YES
 
@@ -88,15 +93,6 @@ class SubjectHelper:
             self.prev_result == POS and self.prev_result_known == YES)
         self.has_tested = YES if YES in [
             self.baseline.has_tested, self.current.has_tested] else NO
-
-    @property
-    def subject_visits(self):
-        if not self._subject_visits:
-            SubjectVisit = django_apps.get_model(
-                *'bcpp_subject.subjectvisit'.split('.'))
-            self._subject_visits = SubjectVisit.objects.filter(
-                subject_identifier=self.subject_identifier).order_by('report_datetime')
-        return self._subject_visits
 
     @property
     def previous_visit(self):
