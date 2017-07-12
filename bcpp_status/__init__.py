@@ -1,2 +1,2 @@
-from .constants import DEFAULTER, ART_PRESCRIPTION, ON_ART
+from .constants import ART_PRESCRIPTION
 from .status_helper import StatusHelper

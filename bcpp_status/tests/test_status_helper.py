@@ -3,10 +3,9 @@ from dateutil.relativedelta import relativedelta
 
 from django.test import TestCase, tag
 
-from edc_constants.constants import (
-    NEG, POS, UNK, YES, IND, NAIVE, NO)
+from edc_constants.constants import NEG, POS, UNK, YES, IND, NAIVE, NO
 
-from ..subject_helper import SubjectHelper, DEFAULTER, ART_PRESCRIPTION, ON_ART
+from ..status_helper import StatusHelper, DEFAULTER, ART_PRESCRIPTION, ON_ART
 from ..tests.test_mixins import SubjectMixin
 
 from model_mommy import mommy
@@ -22,7 +21,7 @@ class MockVisit:
 
 
 @tag('SS')
-class TestSubjectHelper(SubjectMixin, TestCase):
+class TestStatusHelper(SubjectMixin, TestCase):
 
     def setUp(self):
         self.visit = MockVisit()
@@ -55,7 +54,7 @@ class TestSubjectHelper(SubjectMixin, TestCase):
             today_hiv_result=POS,
             today_hiv_result_date=date(2016, 1, 7)
         )
-        obj = SubjectHelper(self.visit, model_values=self.model_values)
+        obj = StatusHelper(self.visit, model_values=self.model_values)
         self.assertEqual(obj.final_hiv_status, POS)
         self.assertEqual(obj.final_arv_status, NAIVE)
         self.assertEqual(obj.prev_result_known, YES)
@@ -132,7 +131,7 @@ class TestSubjectHelper(SubjectMixin, TestCase):
             hiv_result=POS,
             insufficient_vol=NO)
 
-        obj = SubjectHelper(subject_visit)
+        obj = StatusHelper(subject_visit)
         self.assertEqual(obj.final_hiv_status, POS)
         self.assertEqual(obj.final_arv_status, NAIVE)
         self.assertEqual(obj.prev_result_known, YES)
@@ -144,7 +143,7 @@ class TestSubjectHelper(SubjectMixin, TestCase):
             today_hiv_result=POS,
             today_hiv_result_date=date(2016, 1, 7),
         )
-        obj = SubjectHelper(self.visit, model_values=self.model_values)
+        obj = StatusHelper(self.visit, model_values=self.model_values)
         self.assertEqual(obj.final_hiv_status, POS)
         self.assertEqual(obj.final_hiv_status_date, date(2016, 1, 7))
         self.assertIsNone(obj.prev_result)
@@ -182,7 +181,7 @@ class TestSubjectHelper(SubjectMixin, TestCase):
             hiv_result=POS,
             insufficient_vol=NO)
 
-        obj = SubjectHelper(self.subject_visit_male_t0)
+        obj = StatusHelper(self.subject_visit_male_t0)
         self.assertEqual(obj.final_hiv_status, POS)
         self.assertIsNone(obj.prev_result)
         self.assertIsNone(obj.prev_result_known)
@@ -201,7 +200,7 @@ class TestSubjectHelper(SubjectMixin, TestCase):
             on_arv=NO,
             result_recorded_document=ART_PRESCRIPTION,
         )
-        obj = SubjectHelper(self.visit, model_values=self.model_values)
+        obj = StatusHelper(self.visit, model_values=self.model_values)
         self.assertEqual(obj.final_arv_status, DEFAULTER)
         self.assertEqual(obj.final_hiv_status_date, date(2013, 5, 7))
         self.assertEqual(obj.prev_result_date, date(2013, 5, 7))
@@ -283,7 +282,7 @@ class TestSubjectHelper(SubjectMixin, TestCase):
             hiv_result=POS,
             insufficient_vol=NO)
 
-        obj = SubjectHelper(subject_visit)
+        obj = StatusHelper(subject_visit)
         self.assertEqual(obj.final_arv_status, DEFAULTER)
         self.assertEqual(obj.final_hiv_status_date, date(2013, 5, 7))
         self.assertEqual(obj.prev_result_date, date(2013, 5, 7))
@@ -298,7 +297,7 @@ class TestSubjectHelper(SubjectMixin, TestCase):
             recorded_hiv_result=POS,
             recorded_hiv_result_date=date(2015, 1, 7),
         )
-        obj = SubjectHelper(self.visit, model_values=self.model_values)
+        obj = StatusHelper(self.visit, model_values=self.model_values)
         self.assertEqual(obj.prev_result, POS)
         self.assertEqual(obj.prev_result_date, date(2015, 1, 7))
         self.assertEqual(obj.prev_result_known, YES)
@@ -344,7 +343,7 @@ class TestSubjectHelper(SubjectMixin, TestCase):
             hiv_result=POS,
             insufficient_vol=NO)
 
-        obj = SubjectHelper(self.subject_visit_male_t0)
+        obj = StatusHelper(self.subject_visit_male_t0)
         self.assertEqual(obj.prev_result, POS)
         self.assertEqual(obj.prev_result_known, YES)
 
@@ -358,7 +357,7 @@ class TestSubjectHelper(SubjectMixin, TestCase):
             recorded_hiv_result=POS,
             recorded_hiv_result_date=date(2015, 1, 7)
         )
-        obj = SubjectHelper(self.visit, model_values=self.model_values)
+        obj = StatusHelper(self.visit, model_values=self.model_values)
         self.assertEqual(obj.final_hiv_status_date, date(2015, 1, 7))
 
     @tag('model_data')
@@ -399,7 +398,7 @@ class TestSubjectHelper(SubjectMixin, TestCase):
         subject_visit = self.add_subject_visit_followup(
             self.subject_visit_male_t0.household_member, T1)
 
-        obj = SubjectHelper(subject_visit)
+        obj = StatusHelper(subject_visit)
         self.assertEqual(obj.prev_result, POS)
         self.assertEqual(obj.prev_result_known, YES)
 
@@ -412,7 +411,7 @@ class TestSubjectHelper(SubjectMixin, TestCase):
             recorded_hiv_result=NEG,
             recorded_hiv_result_date=date(2015, 1, 7)
         )
-        obj = SubjectHelper(self.visit, model_values=self.model_values)
+        obj = StatusHelper(self.visit, model_values=self.model_values)
         self.assertEqual(obj.prev_result_known, YES)
         self.assertEqual(obj.prev_result, NEG)
         self.assertEqual(obj.prev_result_date, date(2015, 1, 7))
@@ -455,7 +454,7 @@ class TestSubjectHelper(SubjectMixin, TestCase):
         subject_visit = self.add_subject_visit_followup(
             self.subject_visit_male_t0.household_member, T1)
 
-        obj = SubjectHelper(subject_visit)
+        obj = StatusHelper(subject_visit)
         self.assertEqual(obj.prev_result_known, YES)
         self.assertEqual(obj.prev_result, NEG)
 
@@ -471,7 +470,7 @@ class TestSubjectHelper(SubjectMixin, TestCase):
             result_recorded=POS,
             result_recorded_date=date(2014, 1, 7)
         )
-        obj = SubjectHelper(self.visit, model_values=self.model_values)
+        obj = StatusHelper(self.visit, model_values=self.model_values)
         self.assertEqual(obj.prev_result_known, YES)
         self.assertEqual(obj.prev_result, POS)
         self.assertEqual(obj.prev_result_date, date(2014, 1, 7))
@@ -490,7 +489,7 @@ class TestSubjectHelper(SubjectMixin, TestCase):
             result_recorded=POS,
             result_recorded_date=date(2014, 1, 7)
         )
-        obj = SubjectHelper(self.visit, model_values=self.model_values)
+        obj = StatusHelper(self.visit, model_values=self.model_values)
         self.assertEqual(obj.prev_result_known, YES)
         self.assertEqual(obj.prev_result, POS)
         self.assertEqual(obj.prev_result_date, date(2014, 1, 7))
@@ -508,7 +507,7 @@ class TestSubjectHelper(SubjectMixin, TestCase):
             result_recorded=NEG,
             result_recorded_date=date(2014, 1, 7)
         )
-        obj = SubjectHelper(self.visit, model_values=self.model_values)
+        obj = StatusHelper(self.visit, model_values=self.model_values)
         self.assertEqual(obj.prev_result_known, YES)
         self.assertEqual(obj.prev_result, NEG)
         self.assertEqual(obj.prev_result_date, date(2015, 1, 7))
@@ -525,7 +524,7 @@ class TestSubjectHelper(SubjectMixin, TestCase):
             recorded_hiv_result=POS,
             recorded_hiv_result_date=date(2015, 1, 6),
         )
-        obj = SubjectHelper(self.visit, model_values=self.model_values)
+        obj = StatusHelper(self.visit, model_values=self.model_values)
         self.assertEqual(obj.prev_result_known, YES)
         self.assertEqual(obj.prev_result, NEG)
         self.assertEqual(obj.prev_result_date, date(2015, 1, 6))
@@ -541,7 +540,7 @@ class TestSubjectHelper(SubjectMixin, TestCase):
             result_recorded=POS,
             result_recorded_date=date(2015, 1, 6),
         )
-        obj = SubjectHelper(self.visit, model_values=self.model_values)
+        obj = StatusHelper(self.visit, model_values=self.model_values)
         self.assertEqual(obj.prev_result_known, YES)
         self.assertEqual(obj.prev_result, NEG)
         self.assertEqual(obj.prev_result_date, date(2015, 1, 6))
@@ -557,7 +556,7 @@ class TestSubjectHelper(SubjectMixin, TestCase):
             result_recorded=POS,
             result_recorded_date=date(2015, 1, 6),
         )
-        obj = SubjectHelper(self.visit, model_values=self.model_values)
+        obj = StatusHelper(self.visit, model_values=self.model_values)
         self.assertEqual(obj.prev_result_known, YES)
         self.assertEqual(obj.prev_result, NEG)
         self.assertEqual(obj.prev_result_date, date(2015, 1, 6))
@@ -575,7 +574,7 @@ class TestSubjectHelper(SubjectMixin, TestCase):
             result_recorded=POS,
             result_recorded_date=date(2014, 1, 7)
         )
-        obj = SubjectHelper(self.visit, model_values=self.model_values)
+        obj = StatusHelper(self.visit, model_values=self.model_values)
         self.assertEqual(obj.final_hiv_status, NEG)
         self.assertEqual(obj.final_hiv_status_date, date(2016, 1, 7))
         self.assertEqual(obj.prev_result, NEG)
@@ -592,7 +591,7 @@ class TestSubjectHelper(SubjectMixin, TestCase):
             result_recorded=POS,
             result_recorded_date=date(2015, 1, 7)
         )
-        obj = SubjectHelper(self.visit, model_values=self.model_values)
+        obj = StatusHelper(self.visit, model_values=self.model_values)
         self.assertEqual(obj.prev_result_known, YES)
         self.assertEqual(obj.prev_result, POS)
         self.assertEqual(obj.prev_result_date, date(2015, 1, 7))
@@ -608,7 +607,7 @@ class TestSubjectHelper(SubjectMixin, TestCase):
             result_recorded=NEG,
             result_recorded_date=date(2015, 1, 6),
         )
-        obj = SubjectHelper(self.visit, model_values=self.model_values)
+        obj = StatusHelper(self.visit, model_values=self.model_values)
         self.assertEqual(obj.prev_result_known, YES)
         self.assertEqual(obj.prev_result, NEG)
         self.assertEqual(obj.prev_result_date, date(2015, 1, 6))
@@ -682,7 +681,7 @@ class TestSubjectHelper(SubjectMixin, TestCase):
             hiv_result=POS,
             insufficient_vol=NO)
 
-        obj = SubjectHelper(self.visit, model_values=self.model_values)
+        obj = StatusHelper(self.visit, model_values=self.model_values)
         self.assertEqual(obj.prev_result_known, YES)
         self.assertEqual(obj.prev_result, NEG)
         self.assertEqual(obj.prev_result_date, date(2015, 1, 6))
@@ -695,7 +694,7 @@ class TestSubjectHelper(SubjectMixin, TestCase):
             today_hiv_result=NEG,
             today_hiv_result_date=date(2016, 1, 7),
         )
-        obj = SubjectHelper(self.visit, model_values=self.model_values)
+        obj = StatusHelper(self.visit, model_values=self.model_values)
         self.assertIsNone(obj.prev_result_known)
         self.assertIsNone(obj.prev_result)
         self.assertIsNone(obj.prev_result_date)
@@ -740,7 +739,7 @@ class TestSubjectHelper(SubjectMixin, TestCase):
             hiv_result_datetime=self.subject_visit_male_t0.report_datetime,
             hiv_result=NEG,
             insufficient_vol=NO)
-        obj = SubjectHelper(self.subject_visit_male_t0)
+        obj = StatusHelper(self.subject_visit_male_t0)
         self.assertIsNone(obj.prev_result_known)
         self.assertIsNone(obj.prev_result)
         self.assertIsNone(obj.prev_result_date)
@@ -757,7 +756,7 @@ class TestSubjectHelper(SubjectMixin, TestCase):
             result_recorded=NEG,
             result_recorded_date=date(2015, 1, 6),
         )
-        obj = SubjectHelper(self.visit, model_values=self.model_values)
+        obj = StatusHelper(self.visit, model_values=self.model_values)
         self.assertEqual(obj.prev_result_known, YES)
         self.assertEqual(obj.prev_result, POS)
         self.assertEqual(obj.prev_result_date, date(2015, 1, 7))
@@ -772,7 +771,7 @@ class TestSubjectHelper(SubjectMixin, TestCase):
             result_recorded=NEG,
             result_recorded_date=date(2015, 1, 6),
         )
-        obj = SubjectHelper(self.visit, model_values=self.model_values)
+        obj = StatusHelper(self.visit, model_values=self.model_values)
         self.assertEqual(obj.prev_result_known, YES)
         self.assertEqual(obj.prev_result, NEG)
         self.assertEqual(obj.prev_result_date, date(2015, 1, 6))
@@ -858,7 +857,7 @@ class TestSubjectHelper(SubjectMixin, TestCase):
             hiv_result=NEG,
             insufficient_vol=NO)
 
-        obj = SubjectHelper(subject_visit)
+        obj = StatusHelper(subject_visit)
         self.assertEqual(obj.prev_result_known, YES)
         self.assertEqual(obj.prev_result, NEG)
 
@@ -875,7 +874,7 @@ class TestSubjectHelper(SubjectMixin, TestCase):
             on_arv=NO,
             result_recorded_document=ART_PRESCRIPTION,
         )
-        obj = SubjectHelper(self.visit, model_values=self.model_values)
+        obj = StatusHelper(self.visit, model_values=self.model_values)
         self.assertEqual(obj.final_hiv_status, POS)
         self.assertEqual(obj.current.arv_evidence, YES)
         self.assertEqual(obj.final_arv_status, DEFAULTER)
@@ -892,7 +891,7 @@ class TestSubjectHelper(SubjectMixin, TestCase):
             ever_taken_arv=NO,
             on_arv=NO,
         )
-        obj = SubjectHelper(self.visit, model_values=self.model_values)
+        obj = StatusHelper(self.visit, model_values=self.model_values)
         self.assertEqual(obj.final_hiv_status, POS)
         self.assertIsNone(obj.current.arv_evidence)
         self.assertEqual(obj.final_arv_status, NAIVE)
@@ -972,7 +971,7 @@ class TestSubjectHelper(SubjectMixin, TestCase):
             hiv_result=POS,
             insufficient_vol=NO)
 
-        obj = SubjectHelper(subject_visit)
+        obj = StatusHelper(subject_visit)
         self.assertEqual(obj.final_hiv_status, POS)
         self.assertEqual(obj.current.arv_evidence, NO)
         self.assertEqual(obj.final_arv_status, NAIVE)
@@ -990,7 +989,7 @@ class TestSubjectHelper(SubjectMixin, TestCase):
             on_arv=NO,
             arv_evidence=YES
         )
-        obj = SubjectHelper(self.visit, model_values=self.model_values)
+        obj = StatusHelper(self.visit, model_values=self.model_values)
         self.assertEqual(obj.final_hiv_status, POS)
         self.assertEqual(obj.current.arv_evidence, YES)
         self.assertEqual(obj.final_arv_status, DEFAULTER)
@@ -1070,7 +1069,7 @@ class TestSubjectHelper(SubjectMixin, TestCase):
             hiv_result=POS,
             insufficient_vol=NO)
 
-        obj = SubjectHelper(subject_visit)
+        obj = StatusHelper(subject_visit)
         self.assertEqual(obj.final_hiv_status, POS)
         self.assertEqual(obj.current.arv_evidence, NO)
         self.assertEqual(obj.final_arv_status, NAIVE)
@@ -1087,7 +1086,7 @@ class TestSubjectHelper(SubjectMixin, TestCase):
             on_arv=YES,
             arv_evidence=YES
         )
-        obj = SubjectHelper(self.visit, model_values=self.model_values)
+        obj = StatusHelper(self.visit, model_values=self.model_values)
         self.assertEqual(obj.final_hiv_status, POS)
         self.assertEqual(obj.current.arv_evidence, YES)
         self.assertEqual(obj.final_arv_status, ON_ART)
@@ -1167,7 +1166,7 @@ class TestSubjectHelper(SubjectMixin, TestCase):
             hiv_result=POS,
             insufficient_vol=NO)
 
-        obj = SubjectHelper(subject_visit)
+        obj = StatusHelper(subject_visit)
         self.assertEqual(obj.final_hiv_status, POS)
         self.assertEqual(obj.current.arv_evidence, YES)
         self.assertEqual(obj.final_arv_status, ON_ART)
@@ -1183,7 +1182,7 @@ class TestSubjectHelper(SubjectMixin, TestCase):
             result_recorded=None,
             result_recorded_date=None,
         )
-        obj = SubjectHelper(self.visit, model_values=self.model_values)
+        obj = StatusHelper(self.visit, model_values=self.model_values)
         self.assertEqual(obj.final_hiv_status, POS)
         self.assertEqual(obj.final_hiv_status_date, date(2015, 11, 4))
 
@@ -1223,13 +1222,13 @@ class TestSubjectHelper(SubjectMixin, TestCase):
             arv_evidence=YES,  # this is the rule field
         )
 
-        obj = SubjectHelper(self.subject_visit_male_t0)
+        obj = StatusHelper(self.subject_visit_male_t0)
         self.assertTrue(obj.defaulter_at_baseline)
 
         subject_visit = self.add_subject_visit_followup(
             self.subject_visit_male_t0.household_member, T1)
 
-        obj = SubjectHelper(subject_visit)
+        obj = StatusHelper(subject_visit)
         self.assertTrue(obj.defaulter_at_baseline)
 
         # add HivCarAdherence,
@@ -1244,6 +1243,6 @@ class TestSubjectHelper(SubjectMixin, TestCase):
             on_arv=YES,
             arv_evidence=YES,  # this is the rule field
         )
-        obj = SubjectHelper(subject_visit)
+        obj = StatusHelper(subject_visit)
         self.assertEqual(obj.final_arv_status, ON_ART)
         self.assertTrue(obj.defaulter_at_baseline)

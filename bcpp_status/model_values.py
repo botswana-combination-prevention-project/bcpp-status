@@ -1,8 +1,5 @@
+from django.apps import apps as django_apps
 from edc_constants.constants import POS, NOT_APPLICABLE, DECLINED, NEG, NO, DWTA
-
-# from ..models import (
-#     HivCareAdherence, ElisaHivResult, HivTestingHistory, HivTestReview,
-#     HivResultDocumentation, HivResult, SubjectVisit)
 
 
 class ModelValues:
@@ -11,7 +8,12 @@ class ModelValues:
     helper class.
     """
 
-    def __init__(self, visit, baseline=None):
+    def __init__(self, visit, baseline=None, models=None):
+        if models:
+            self.models = models
+        else:
+            self.models = models or django_apps.get_app_config(
+                'bcpp_status').models
         self.arv_evidence = None
         self.elisa_hiv_result = None
         self.elisa_hiv_result_date = None
@@ -28,7 +30,7 @@ class ModelValues:
         self.today_hiv_result_date = None
 
         if baseline:
-            self.subject_visit = SubjectVisit.objects.filter(
+            self.subject_visit = self.models.get('subjectvisit').objects.filter(
                 subject_identifier=visit.subject_identifier).order_by(
                     'report_datetime').first()
             options = dict(subject_visit=self.subject_visit)
@@ -39,7 +41,7 @@ class ModelValues:
                 subject_visit__report_datetime__lte=visit.report_datetime)
 
         # HivCareAdherence
-        obj = HivCareAdherence.objects.filter(
+        obj = self.models.get('hivcareadherence').objects.filter(
             **options).order_by('report_datetime').last()
         if obj:
             self.arv_evidence = None if obj.arv_evidence == NOT_APPLICABLE else obj.arv_evidence
@@ -69,6 +71,7 @@ class ModelValues:
         # HivResult performed, not declined
         self.update_from_rapid_hiv_tests(visit, **options)
 
+        HivResult = self.models.get('hivresult')
         try:
             obj = HivResult.objects.get(
                 subject_visit=visit, hiv_result=DECLINED)
@@ -78,7 +81,8 @@ class ModelValues:
             self.declined = True
 
     def update_from_hiv_testing_history(self, visit, **options):
-        qs = HivTestingHistory.objects.filter(
+
+        qs = self.models.get('hivtestinghistory').objects.filter(
             **options).order_by('report_datetime')
         if qs:
             obj = self.get_first_positive_or_none(qs, 'verbal_hiv_result')
@@ -98,6 +102,7 @@ class ModelValues:
         today, if it exists.
         """
         # HivResult performed, not declined
+        HivResult = self.models.get('hivresult')
         qs = HivResult.objects.filter(
             hiv_result_datetime__isnull=False,
             **options).order_by('hiv_result_datetime')
@@ -118,7 +123,7 @@ class ModelValues:
         # print('today_hiv_result', self.today_hiv_result)
 
     def update_from_direct_documention(self, visit, **options):
-        qs = HivTestReview.objects.filter(
+        qs = self.models.get('hivtestreview').objects.filter(
             **options).order_by('hiv_test_date')
         if qs:
             obj = self.get_first_positive_or_none(qs, 'recorded_hiv_result')
@@ -135,7 +140,7 @@ class ModelValues:
         POS from the history of HivResultDocumentation, if one exists, or from
         the last entered HivResultDocumentation.
         """
-        qs = HivResultDocumentation.objects.filter(
+        qs = self.models.get('hivresultdocumentation').objects.filter(
             **options).order_by('result_date')
         if qs:
             obj = self.get_first_positive_or_none(qs, 'result_recorded')
@@ -153,7 +158,7 @@ class ModelValues:
         """Updates using the first POS, if it exists, or the last result,
         if it exists.
         """
-        qs = ElisaHivResult.objects.filter(
+        qs = self.models.get('elisaresult').objects.filter(
             **options).order_by('hiv_result_datetime')
         if qs:
             obj = self.get_first_positive_or_none(qs, 'hiv_result')
