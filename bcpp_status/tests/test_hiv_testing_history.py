@@ -1,8 +1,6 @@
-from dateutil.relativedelta import relativedelta
 from django.test import tag
 
-from edc_base.utils import get_utcnow
-from edc_constants.constants import POS, NEG, DECLINED, YES, NO
+from edc_constants.constants import POS, NEG, YES, NO
 
 from ..model_values import HivTestingHistory
 from .values_test_case import ValuesTestCase

@@ -39,3 +39,5 @@ class ElisaResult(Values):
             self.values.update(elisa_hiv_result_date=None)
         self.values.update(hiv_result=elisa_hiv_result)
         self.values.update(hiv_result_datetime=elisa_hiv_result_datetime)
+        self.values.update(elisa_hiv_result=elisa_hiv_result)
+        self.values.update(elisa_hiv_result_datetime=elisa_hiv_result_datetime)

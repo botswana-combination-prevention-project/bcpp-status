@@ -3,11 +3,9 @@ from django.test import TestCase, tag
 from edc_reference.tests import ReferenceTestHelper
 from edc_base.utils import get_utcnow
 
-from bcpp_status.model_values.model_values import ModelValues
-from edc_constants.constants import YES
+from ..model_values import ModelValues
 
 
-@tag('2')
 class TestModelValues(TestCase):
 
     reference_helper_cls = ReferenceTestHelper
@@ -43,25 +41,4 @@ class TestModelValues(TestCase):
             'today_hiv_result_date': None,
         }
         for attr in attrs:
-            self.assertIn(attr, model_values.__dict__)
-
-    def test_hivcareadherence_baseline(self):
-        model = 'hivcareadherence'
-        report_datetime = get_utcnow()
-        visit_code = 'bhs'
-        attrs = {
-            'arv_evidence': (YES, 'CharField'),
-            'ever_taken_arv': (YES, 'CharField'),
-            'on_arv': (YES, 'CharField'),
-        }
-        self.reference_helper.create_visit(
-            report_datetime=report_datetime, timepoint=visit_code)
-        self.reference_helper.create_for_model(
-            report_datetime=report_datetime, model=model, visit_code=visit_code,
-            **attrs)
-        model_values = ModelValues(
-            subject_identifier=self.subject_identifier,
-            report_datetime=get_utcnow(),
-            baseline=True)
-        for key, value in attrs.items():
-            self.assertEqual(value[0], getattr(model_values, key))
+            self.assertIn(attr, model_values.values)

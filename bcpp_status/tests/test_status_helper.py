@@ -6,13 +6,11 @@ from dateutil.relativedelta import relativedelta
 from django.test import TestCase, tag
 
 from edc_base.utils import get_utcnow
-from edc_constants.constants import NEG, POS, UNK, YES, IND, NAIVE, NO, MALE
+from edc_constants.constants import NEG, POS, UNK, YES, IND, NAIVE, NO
 from edc_reference.tests import ReferenceTestHelper
 from edc_reference import LongitudinalRefset, site_reference_configs
 
 from ..status_helper import StatusHelper, DEFAULTER, ART_PRESCRIPTION, ON_ART
-
-from pprint import pprint
 
 MICROTUBE = 'Microtube'
 T1 = 'T1'
@@ -50,14 +48,12 @@ class TestStatusHelper(TestCase):
             'today_hiv_result_date': None,
         }
 
-    @tag('1')
     def test(self):
         self.assertIn('hiv_result', site_reference_configs.get_fields(
             'bcpp_subject.hivresult'))
         self.assertIn('arv_evidence', site_reference_configs.get_fields(
             'bcpp_subject.HivCareAdherence'))
 
-    @tag('3')
     def test_visit(self):
         """Assert picks up the correct visit.
         """
@@ -80,7 +76,6 @@ class TestStatusHelper(TestCase):
         status_helper = StatusHelper(visit=subject_visits[1])
         self.assertEqual(status_helper.subject_visit, subject_visits[1])
 
-    @tag('3')
     def test_init_with_data(self):
         report_datetime = get_utcnow()
 
@@ -131,7 +126,6 @@ class TestStatusHelper(TestCase):
 
         self.assertTrue(StatusHelper(visit=subject_visits[0]))
 
-    @tag('3')
     def test_assert_baseline_pos(self):
         report_datetime = get_utcnow()
         self.reference_helper.create_visit(
@@ -171,7 +165,6 @@ class TestStatusHelper(TestCase):
         self.assertEqual(status_helper.prev_result_known, YES)
         self.assertEqual(status_helper.prev_result, NEG)
 
-    @tag('4')
     def test1(self):
         report_datetime = get_utcnow()
 
@@ -259,7 +252,6 @@ class TestStatusHelper(TestCase):
         self.assertEqual(obj.prev_result_known, YES)
         self.assertEqual(obj.prev_result, NEG)
 
-    @tag('4')
     def test_final_hiv_status_date(self):
         """Assert date is today's hiv result date."""
         report_datetime = Arrow.fromdatetime(datetime(2016, 1, 7)).datetime
@@ -287,7 +279,6 @@ class TestStatusHelper(TestCase):
         self.assertIsNone(obj.prev_result_date)
         self.assertIsNone(obj.prev_result_known)
 
-    @tag('4')
     def test_final_hiv_status_date2(self):
         """Assert date is today's hiv result date."""
         report_datetime = Arrow.fromdatetime(datetime(2016, 1, 7)).datetime
@@ -329,7 +320,6 @@ class TestStatusHelper(TestCase):
         self.assertIsNone(obj.prev_result)
         self.assertIsNone(obj.prev_result_known)
 
-    @tag('confirm???erik')
     def test_final_hiv_status_date1(self):
         """Assert date comes from result_recorded_date for
         recorded_hiv_result NEG and DEFAULTER .
@@ -342,12 +332,48 @@ class TestStatusHelper(TestCase):
             ever_taken_arv=NO,
             on_arv=NO,
             result_recorded_document=ART_PRESCRIPTION)
-        obj = StatusHelper(self.visit, model_values=self.model_values)
+        report_datetime = Arrow.fromdatetime(datetime(2016, 1, 7)).datetime
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime, timepoint='T0')
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime + timedelta(days=365), timepoint='T1')
+        subject_visits = LongitudinalRefset(
+            subject_identifier=self.subject_identifier,
+            visit_model=self.visit_model,
+            model=self.visit_model,
+            reference_model_cls=self.reference_model
+        ).order_by('report_datetime')
+
+        # hivtestreview
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivtestreview',
+            visit_code='T0',
+            recorded_hiv_result=NEG,
+            hiv_test_date=Arrow.fromdate(date(2013, 5, 7)).date())
+
+        # hivresultdocumentation
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivresultdocumentation',
+            visit_code='T0',
+            result_recorded=POS,
+            result_date=Arrow.fromdate(date(2013, 5, 7)).date(),
+            result_doc_type=ART_PRESCRIPTION)
+
+        # hivcareadherence
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivcareadherence',
+            visit_code='T0',
+            ever_taken_arv=NO,
+            on_arv=NO)
+
+        obj = StatusHelper(visit=subject_visits[0])
         self.assertEqual(obj.final_arv_status, DEFAULTER)
         self.assertEqual(obj.final_hiv_status_date, date(2013, 5, 7))
         self.assertEqual(obj.prev_result_date, date(2013, 5, 7))
 
-    @tag('4')
     def test_final_hiv_status_date12(self):
         """Assert date comes from result_recorded_date for
         recorded_hiv_result NEG and DEFAULTER .
@@ -433,6 +459,7 @@ class TestStatusHelper(TestCase):
             visit_code='T1',
             hiv_result=POS,
             hiv_result_datetime=subject_visits[1].report_datetime)
+
         obj = StatusHelper(visit=subject_visits[1])
 
         self.assertEqual(obj.final_hiv_status, POS)
@@ -441,7 +468,6 @@ class TestStatusHelper(TestCase):
         self.assertEqual(obj.prev_result_date, date(2016, 1, 7))
         self.assertEqual(obj.final_arv_status, DEFAULTER)
 
-    @tag('4')
     def test_prev_result_pos(self):
         """Assert prev_result POS taken from recorded_hiv_result
         /recorded_hiv_result_date.
@@ -481,7 +507,6 @@ class TestStatusHelper(TestCase):
                          Arrow.fromdate(date(2015, 1, 7)).date())
         self.assertEqual(obj.prev_result_known, YES)
 
-    @tag('4')
     def test_prev_result_pos1(self):
         """Assert prev_result POS taken from recorded_hiv_result
         /recorded_hiv_result_date.
@@ -525,7 +550,6 @@ class TestStatusHelper(TestCase):
         self.assertEqual(obj.prev_result, POS)
         self.assertEqual(obj.prev_result_known, YES)
 
-    @tag('4')
     def test_first_pos_date(self):
         """Assert uses recorded_hiv_result_date as final date since
         this is the date first POS.
@@ -559,7 +583,6 @@ class TestStatusHelper(TestCase):
         obj = StatusHelper(visit=subject_visits[0])
         self.assertEqual(obj.final_hiv_status_date, date(2015, 1, 7))
 
-    @tag('4')
     def test_first_pos_date1(self):
         """Assert prev_result POS taken from recorded_hiv_result
         /recorded_hiv_result_date.
@@ -606,7 +629,6 @@ class TestStatusHelper(TestCase):
         self.assertEqual(obj.prev_result, POS)
         self.assertEqual(obj.prev_result_known, YES)
 
-    @tag('4')
     def test_prev_result_neg(self):
         """Assert prev_result NEG from recorded_hiv_result.
         """
@@ -644,7 +666,6 @@ class TestStatusHelper(TestCase):
         self.assertEqual(obj.prev_result_date, date(2015, 1, 7))
         self.assertEqual(obj.final_hiv_status_date, date(2016, 1, 7))
 
-    @tag('4')
     def test_prev_result_neg1(self):
         """Assert prev_result NEG from recorded_hiv_result.
         """
@@ -689,7 +710,6 @@ class TestStatusHelper(TestCase):
         self.assertEqual(obj.prev_result_known, YES)
         self.assertEqual(obj.prev_result, NEG)
 
-    @tag('4')
     def test_prev_result_pos2(self):
         """Assert prev_result POS if recorded_hiv_result,
         result_recorded are discordant.
@@ -737,7 +757,6 @@ class TestStatusHelper(TestCase):
         self.assertEqual(obj.prev_result_date, date(2014, 1, 7))
         self.assertEqual(obj.final_hiv_status_date, date(2014, 1, 7))
 
-    @tag('4')
     def test_prev_result_pos21(self):
         """Assert prev_result POS if recorded_hiv_result,
         result_recorded are discordant.
@@ -789,15 +808,44 @@ class TestStatusHelper(TestCase):
         """Assert prev_result NEG if recorded_hiv_result,
         result_recorded are discordant.
         """
-        self.model_values.update(
-            today_hiv_result=POS,
-            today_hiv_result_date=date(2016, 1, 7),
+        report_datetime = Arrow.fromdatetime(datetime(2016, 1, 7)).datetime
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime, timepoint='T0')
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime, timepoint='T1')
+        subject_visits = LongitudinalRefset(
+            subject_identifier=self.subject_identifier,
+            visit_model=self.visit_model,
+            model=self.visit_model,
+            reference_model_cls=self.reference_model
+        ).order_by('report_datetime')
+
+        # hivresult
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivresult',
+            visit_code='T0',
+            hiv_result=POS,
+            hiv_result_datetime=report_datetime)
+
+        # hivtestreview
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivtestreview',
+            visit_code='T0',
             recorded_hiv_result=NEG,
-            recorded_hiv_result_date=date(2015, 1, 7),
+            hiv_test_date=Arrow.fromdate(date(2015, 1, 7)).date())
+
+        # hivresultdocumentation
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivresultdocumentation',
+            visit_code='T0',
             result_recorded=NEG,
-            result_recorded_date=date(2014, 1, 7)
-        )
-        obj = StatusHelper(self.visit, model_values=self.model_values)
+            result_date=Arrow.fromdate(date(2014, 1, 7)).date(),
+            result_doc_type='PIMS')
+
+        obj = StatusHelper(visit=subject_visits[0])
         self.assertEqual(obj.prev_result_known, YES)
         self.assertEqual(obj.prev_result, NEG)
         self.assertEqual(obj.prev_result_date, date(2015, 1, 7))
@@ -808,63 +856,160 @@ class TestStatusHelper(TestCase):
         """Assert assumes prev_result is wrong based on final
         hiv result, flips result value from POS to NEG.
         """
-        self.model_values.update(
-            today_hiv_result=NEG,
-            today_hiv_result_date=date(2016, 1, 7),
+        report_datetime = Arrow.fromdatetime(datetime(2016, 1, 7)).datetime
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime, timepoint='T0')
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime, timepoint='T1')
+        subject_visits = LongitudinalRefset(
+            subject_identifier=self.subject_identifier,
+            visit_model=self.visit_model,
+            model=self.visit_model,
+            reference_model_cls=self.reference_model
+        ).order_by('report_datetime')
+
+        # hivresult
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivresult',
+            visit_code='T0',
+            hiv_result=NEG,
+            hiv_result_datetime=report_datetime)
+
+        # hivtestreview
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivtestreview',
+            visit_code='T0',
             recorded_hiv_result=POS,
-            recorded_hiv_result_date=date(2015, 1, 6),
-        )
-        obj = StatusHelper(self.visit, model_values=self.model_values)
+            hiv_test_date=Arrow.fromdate(date(2015, 1, 7)).date())
+
+        obj = StatusHelper(visit=subject_visits[0])
         self.assertEqual(obj.prev_result_known, YES)
         self.assertEqual(obj.prev_result, NEG)
-        self.assertEqual(obj.prev_result_date, date(2015, 1, 6))
+        self.assertEqual(obj.prev_result_date, date(2015, 1, 7))
         self.assertEqual(obj.final_hiv_status_date, date(2016, 1, 7))
 
     def test_prev_result_flips_if_absurd2(self):
         """Assert assumes prev_result is wrong based on final hiv result,
         flips result value from POS to NEG.
         """
-        self.model_values.update(
-            today_hiv_result=NEG,
-            today_hiv_result_date=date(2016, 1, 7),
+        report_datetime = Arrow.fromdatetime(datetime(2016, 1, 7)).datetime
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime, timepoint='T0')
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime, timepoint='T1')
+        subject_visits = LongitudinalRefset(
+            subject_identifier=self.subject_identifier,
+            visit_model=self.visit_model,
+            model=self.visit_model,
+            reference_model_cls=self.reference_model
+        ).order_by('report_datetime')
+
+        # hivresult
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivresult',
+            visit_code='T0',
+            hiv_result=NEG,
+            hiv_result_datetime=report_datetime)
+
+        # hivresultdocumentation
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivresultdocumentation',
+            visit_code='T0',
             result_recorded=POS,
-            result_recorded_date=date(2015, 1, 6),
-        )
-        obj = StatusHelper(self.visit, model_values=self.model_values)
+            result_date=Arrow.fromdate(date(2015, 1, 7)).date(),
+            result_doc_type='PIMS')
+
+        obj = StatusHelper(visit=subject_visits[0])
         self.assertEqual(obj.prev_result_known, YES)
         self.assertEqual(obj.prev_result, NEG)
-        self.assertEqual(obj.prev_result_date, date(2015, 1, 6))
+        self.assertEqual(obj.prev_result_date, date(2015, 1, 7))
         self.assertEqual(obj.final_hiv_status_date, date(2016, 1, 7))
 
     def test_prev_result_none_if_absurd2(self):
         """Assert assumes prev_result is wrong based on final
         hiv result, flips result value from POS to NEG.
         """
-        self.model_values.update(
-            today_hiv_result=NEG,
-            today_hiv_result_date=date(2016, 1, 7),
+        report_datetime = Arrow.fromdatetime(datetime(2016, 1, 7)).datetime
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime, timepoint='T0')
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime, timepoint='T1')
+        subject_visits = LongitudinalRefset(
+            subject_identifier=self.subject_identifier,
+            visit_model=self.visit_model,
+            model=self.visit_model,
+            reference_model_cls=self.reference_model
+        ).order_by('report_datetime')
+
+        # hivresult
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivresult',
+            visit_code='T0',
+            hiv_result=NEG,
+            hiv_result_datetime=report_datetime)
+
+        # hivresultdocumentation
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivresultdocumentation',
+            visit_code='T0',
             result_recorded=POS,
-            result_recorded_date=date(2015, 1, 6),
-        )
-        obj = StatusHelper(self.visit, model_values=self.model_values)
+            result_date=Arrow.fromdate(date(2015, 1, 7)).date(),
+            result_doc_type='PIMS')
+
+        obj = StatusHelper(visit=subject_visits[0])
         self.assertEqual(obj.prev_result_known, YES)
         self.assertEqual(obj.prev_result, NEG)
-        self.assertEqual(obj.prev_result_date, date(2015, 1, 6))
+        self.assertEqual(obj.prev_result_date, date(2015, 1, 7))
         self.assertEqual(obj.final_hiv_status_date, date(2016, 1, 7))
 
     def test_prev_result_neg_ignores_absurd_result_recorded(self):
         """Assert prev_result NEG from recorded_hiv_result, ignores
         result_recorded eventhough it is absurd.
         """
-        self.model_values.update(
-            today_hiv_result=NEG,
-            today_hiv_result_date=date(2016, 1, 7),
-            recorded_hiv_result=NEG,
-            recorded_hiv_result_date=date(2015, 1, 7),
+        report_datetime = Arrow.fromdatetime(datetime(2016, 1, 7)).datetime
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime, timepoint='T0')
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime, timepoint='T1')
+        subject_visits = LongitudinalRefset(
+            subject_identifier=self.subject_identifier,
+            visit_model=self.visit_model,
+            model=self.visit_model,
+            reference_model_cls=self.reference_model
+        ).order_by('report_datetime')
+
+        # hivresult
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivresult',
+            visit_code='T0',
+            hiv_result=NEG,
+            hiv_result_datetime=report_datetime)
+
+        # hivresultdocumentation
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivresultdocumentation',
+            visit_code='T0',
             result_recorded=POS,
-            result_recorded_date=date(2014, 1, 7)
-        )
-        obj = StatusHelper(self.visit, model_values=self.model_values)
+            result_date=Arrow.fromdate(date(2014, 1, 7)).date(),
+            result_doc_type='PIMS')
+
+        # hivtestreview
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivtestreview',
+            visit_code='T0',
+            recorded_hiv_result=NEG,
+            hiv_test_date=Arrow.fromdate(date(2015, 1, 7)).date())
+
+        obj = StatusHelper(visit=subject_visits[0])
         self.assertEqual(obj.final_hiv_status, NEG)
         self.assertEqual(obj.final_hiv_status_date, date(2016, 1, 7))
         self.assertEqual(obj.prev_result, NEG)
@@ -875,13 +1020,36 @@ class TestStatusHelper(TestCase):
         """Assert sets prev_result POS and uses prev result date
         for final date.
         """
-        self.model_values.update(
-            today_hiv_result=POS,
-            today_hiv_result_date=date(2016, 1, 7),
+        report_datetime = Arrow.fromdatetime(datetime(2016, 1, 7)).datetime
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime, timepoint='T0')
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime, timepoint='T1')
+        subject_visits = LongitudinalRefset(
+            subject_identifier=self.subject_identifier,
+            visit_model=self.visit_model,
+            model=self.visit_model,
+            reference_model_cls=self.reference_model
+        ).order_by('report_datetime')
+
+        # hivresult
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivresult',
+            visit_code='T0',
+            hiv_result=POS,
+            hiv_result_datetime=report_datetime)
+
+        # hivresultdocumentation
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivresultdocumentation',
+            visit_code='T0',
             result_recorded=POS,
-            result_recorded_date=date(2015, 1, 7)
-        )
-        obj = StatusHelper(self.visit, model_values=self.model_values)
+            result_date=Arrow.fromdate(date(2015, 1, 7)).date(),
+            result_doc_type='PIMS')
+
+        obj = StatusHelper(visit=subject_visits[0])
         self.assertEqual(obj.prev_result_known, YES)
         self.assertEqual(obj.prev_result, POS)
         self.assertEqual(obj.prev_result_date, date(2015, 1, 7))
@@ -891,145 +1059,146 @@ class TestStatusHelper(TestCase):
         """Assert sets prev_result NEG and uses today's result date
         for final date.
         """
-        self.model_values.update(
-            today_hiv_result=POS,
-            today_hiv_result_date=date(2016, 1, 7),
+        report_datetime = Arrow.fromdatetime(datetime(2016, 1, 7)).datetime
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime, timepoint='T0')
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime, timepoint='T1')
+        subject_visits = LongitudinalRefset(
+            subject_identifier=self.subject_identifier,
+            visit_model=self.visit_model,
+            model=self.visit_model,
+            reference_model_cls=self.reference_model
+        ).order_by('report_datetime')
+
+        # hivresult
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivresult',
+            visit_code='T0',
+            hiv_result=POS,
+            hiv_result_datetime=report_datetime)
+
+        # hivresultdocumentation
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivresultdocumentation',
+            visit_code='T0',
             result_recorded=NEG,
-            result_recorded_date=date(2015, 1, 6),
-        )
-        obj = StatusHelper(self.visit, model_values=self.model_values)
+            result_date=Arrow.fromdate(date(2015, 1, 7)).date(),
+            result_doc_type='PIMS')
+
+        obj = StatusHelper(visit=subject_visits[0])
+
         self.assertEqual(obj.prev_result_known, YES)
         self.assertEqual(obj.prev_result, NEG)
-        self.assertEqual(obj.prev_result_date, date(2015, 1, 6))
+        self.assertEqual(obj.prev_result_date, date(2015, 1, 7))
         self.assertEqual(obj.final_hiv_status_date, date(2016, 1, 7))
 
-    @tag('model_data')
     def test_prev_result_neg31(self):
         """Assert sets prev_result NEG and uses today's result date
         for final date.
         """
-        self.model_values.update(
-            today_hiv_result=POS,
-            today_hiv_result_date=date(2016, 1, 7),
-            result_recorded=NEG,
-            result_recorded_date=date(2015, 1, 6),
-        )
-        mommy.make_recipe(
-            'bcpp_subject.hivtestinghistory',
-            subject_visit=self.subject_visit_male_t0,
-            report_datetime=self.subject_visit_male_t0.report_datetime,
-            has_tested=YES,
-            when_hiv_test='1 to 5 months ago',
-            has_record=YES,
-            verbal_hiv_result=NEG,
-            other_record=NO
-        )
-        hiv_test_date = (
-            self.subject_visit_male_t0.report_datetime - relativedelta(days=10))
-        mommy.make_recipe(
-            'bcpp_subject.hivtestreview',
-            subject_visit=self.subject_visit_male_t0,
-            hiv_test_date=hiv_test_date.date(),
-            recorded_hiv_result=NEG)
-        mommy.make_recipe(
-            'bcpp_subject.subjectrequisition',
-            subject_visit=self.subject_visit_male_t0,
-            report_datetime=self.subject_visit_male_t0.report_datetime,
-            panel_name=MICROTUBE,
-            is_drawn=YES)
-        mommy.make_recipe(
-            'bcpp_subject.hivresult',
-            subject_visit=self.subject_visit_male_t0,
-            report_datetime=self.subject_visit_male_t0.report_datetime,
-            hiv_result=NEG,
-            insufficient_vol=NO)
+        report_datetime = Arrow.fromdatetime(datetime(2016, 1, 7)).datetime
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime, timepoint='T0')
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime, timepoint='T1')
+        subject_visits = LongitudinalRefset(
+            subject_identifier=self.subject_identifier,
+            visit_model=self.visit_model,
+            model=self.visit_model,
+            reference_model_cls=self.reference_model
+        ).order_by('report_datetime')
 
-        subject_visit = self.add_subject_visit_followup(
-            self.subject_visit_male_t0.household_member, T1)
-
-        report_datetime = subject_visit.report_datetime + timedelta(hours=10)
-        mommy.make_recipe(
-            'bcpp_subject.hivtestinghistory',
-            subject_visit=subject_visit,
+        # hivresult
+        self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            has_tested=YES,
-            when_hiv_test='1 to 5 months ago',
-            has_record=YES,
-            verbal_hiv_result=POS,
-            other_record=NO)
-
-        mommy.make_recipe(
-            'bcpp_subject.subjectrequisition',
-            subject_visit=subject_visit,
-            report_datetime=report_datetime,
-            panel_name=MICROTUBE,
-            is_drawn=YES)
-        mommy.make_recipe(
-            'bcpp_subject.hivresult',
-            subject_visit=subject_visit,
-            report_datetime=report_datetime + relativedelta(months=4),
+            model='hivresult',
+            visit_code='T0',
             hiv_result=POS,
-            insufficient_vol=NO)
+            hiv_result_datetime=report_datetime)
 
-        obj = StatusHelper(self.visit, model_values=self.model_values)
+        # hivresultdocumentation
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivresultdocumentation',
+            visit_code='T0',
+            result_recorded=NEG,
+            result_date=Arrow.fromdate(date(2015, 1, 7)).date(),
+            result_doc_type='PIMS')
+
+        obj = StatusHelper(visit=subject_visits[0])
+
         self.assertEqual(obj.prev_result_known, YES)
         self.assertEqual(obj.prev_result, NEG)
-        self.assertEqual(obj.prev_result_date, date(2015, 1, 6))
+        self.assertEqual(obj.prev_result_date, date(2015, 1, 7))
         self.assertEqual(obj.final_hiv_status_date, date(2016, 1, 7))
 
     def test_prev_result_missing(self):
         """Assert all previous result values are None.
         """
-        self.model_values.update(
-            today_hiv_result=NEG,
-            today_hiv_result_date=date(2016, 1, 7),
-        )
-        obj = StatusHelper(self.visit, model_values=self.model_values)
+        report_datetime = Arrow.fromdatetime(datetime(2016, 1, 7)).datetime
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime, timepoint='T0')
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime, timepoint='T1')
+        subject_visits = LongitudinalRefset(
+            subject_identifier=self.subject_identifier,
+            visit_model=self.visit_model,
+            model=self.visit_model,
+            reference_model_cls=self.reference_model
+        ).order_by('report_datetime')
+
+        # hivresult
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivresult',
+            visit_code='T0',
+            hiv_result=NEG,
+            hiv_result_datetime=report_datetime)
+
+        obj = StatusHelper(visit=subject_visits[0])
         self.assertIsNone(obj.prev_result_known)
         self.assertIsNone(obj.prev_result)
         self.assertIsNone(obj.prev_result_date)
         self.assertEqual(obj.final_hiv_status, NEG)
         self.assertEqual(obj.final_hiv_status_date, date(2016, 1, 7))
 
-    @tag("model_data")
     def test_prev_result_missing1(self):
         """Assert all previous result values are None.
         """
-        self.model_values.update(
-            today_hiv_result=NEG,
-            today_hiv_result_date=date(2016, 1, 7),
-        )
-        mommy.make_recipe(
-            'bcpp_subject.hivtestinghistory',
-            subject_visit=self.subject_visit_male_t0,
-            report_datetime=self.subject_visit_male_t0.report_datetime,
-            has_tested=YES,
-            when_hiv_test='1 to 5 months ago',
-            has_record=YES,
-            verbal_hiv_result=NEG,
-            other_record=NO
-        )
-#         hiv_test_date = (
-#             self.subject_visit_male_t0.report_datetime - relativedelta(days=10))
-#         mommy.make_recipe(
-#             'bcpp_subject.hivtestreview',
-#             subject_visit=self.subject_visit_male_t0,
-#             hiv_test_date=hiv_test_date.date(),
-#             recorded_hiv_result=NEG)
-        mommy.make_recipe(
-            'bcpp_subject.subjectrequisition',
-            subject_visit=self.subject_visit_male_t0,
-            report_datetime=self.subject_visit_male_t0.report_datetime,
-            panel_name=MICROTUBE,
-            is_drawn=YES)
-        mommy.make_recipe(
-            'bcpp_subject.hivresult',
-            subject_visit=self.subject_visit_male_t0,
-            report_datetime=self.subject_visit_male_t0.report_datetime,
-            hiv_result_datetime=self.subject_visit_male_t0.report_datetime,
+        report_datetime = Arrow.fromdatetime(datetime(2016, 1, 7)).datetime
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime, timepoint='T0')
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime, timepoint='T1')
+        subject_visits = LongitudinalRefset(
+            subject_identifier=self.subject_identifier,
+            visit_model=self.visit_model,
+            model=self.visit_model,
+            reference_model_cls=self.reference_model
+        ).order_by('report_datetime')
+
+        # hivresult
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivresult',
+            visit_code='T0',
             hiv_result=NEG,
-            insufficient_vol=NO)
-        obj = StatusHelper(self.subject_visit_male_t0)
+            hiv_result_datetime=report_datetime)
+
+        # hivtestinghistory
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivtestinghistory',
+            visit_code='T0',
+            other_record=NO,
+            has_tested=YES,
+            verbal_hiv_result=NEG)
+
+        obj = StatusHelper(visit=subject_visits[0])
+
         self.assertIsNone(obj.prev_result_known)
         self.assertIsNone(obj.prev_result)
         self.assertIsNone(obj.prev_result_date)
@@ -1038,15 +1207,44 @@ class TestStatusHelper(TestCase):
     def test_prev_result_pos4(self):
         """Assert takes recorded_hiv_result over result_recorded.
         """
-        self.model_values.update(
-            today_hiv_result=POS,
-            today_hiv_result_date=date(2016, 1, 7),
+        report_datetime = Arrow.fromdatetime(datetime(2016, 1, 7)).datetime
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime, timepoint='T0')
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime, timepoint='T1')
+        subject_visits = LongitudinalRefset(
+            subject_identifier=self.subject_identifier,
+            visit_model=self.visit_model,
+            model=self.visit_model,
+            reference_model_cls=self.reference_model
+        ).order_by('report_datetime')
+
+        # hivresult
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivresult',
+            visit_code='T0',
+            hiv_result=POS,
+            hiv_result_datetime=report_datetime)
+
+        # hivtestreview
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivtestreview',
+            visit_code='T0',
             recorded_hiv_result=POS,
-            recorded_hiv_result_date=date(2015, 1, 7),
+            hiv_test_date=Arrow.fromdate(date(2015, 1, 7)).date())
+
+        # hivresultdocumentation
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivresultdocumentation',
+            visit_code='T0',
             result_recorded=NEG,
-            result_recorded_date=date(2015, 1, 6),
-        )
-        obj = StatusHelper(self.visit, model_values=self.model_values)
+            result_date=Arrow.fromdate(date(2015, 1, 7)).date(),
+            result_doc_type='PIMS')
+
+        obj = StatusHelper(visit=subject_visits[0])
         self.assertEqual(obj.prev_result_known, YES)
         self.assertEqual(obj.prev_result, POS)
         self.assertEqual(obj.prev_result_date, date(2015, 1, 7))
@@ -1055,99 +1253,75 @@ class TestStatusHelper(TestCase):
     def test_prev_result_neg4(self):
         """Assert takes recorded_hiv_result over result_recorded.
         """
-        self.model_values.update(
-            today_hiv_result=NEG,
-            today_hiv_result_date=date(2016, 1, 7),
+        report_datetime = Arrow.fromdatetime(datetime(2016, 1, 7)).datetime
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime, timepoint='T0')
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime, timepoint='T1')
+        subject_visits = LongitudinalRefset(
+            subject_identifier=self.subject_identifier,
+            visit_model=self.visit_model,
+            model=self.visit_model,
+            reference_model_cls=self.reference_model
+        ).order_by('report_datetime')
+
+        # hivresult
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivresult',
+            visit_code='T0',
+            hiv_result=NEG,
+            hiv_result_datetime=report_datetime)
+
+        # hivresultdocumentation
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivresultdocumentation',
+            visit_code='T0',
             result_recorded=NEG,
-            result_recorded_date=date(2015, 1, 6),
-        )
-        obj = StatusHelper(self.visit, model_values=self.model_values)
+            result_date=Arrow.fromdate(date(2015, 1, 7)).date(),
+            result_doc_type='PIMS')
+
+        obj = StatusHelper(visit=subject_visits[0])
         self.assertEqual(obj.prev_result_known, YES)
         self.assertEqual(obj.prev_result, NEG)
-        self.assertEqual(obj.prev_result_date, date(2015, 1, 6))
+        self.assertEqual(obj.prev_result_date, date(2015, 1, 7))
         self.assertEqual(obj.final_hiv_status_date, date(2016, 1, 7))
 
-    @tag('model_data')
     def test_prev_result_neg41(self):
         """Assert takes recorded_hiv_result over result_recorded.
         """
-        self.model_values.update(
-            today_hiv_result=NEG,
-            today_hiv_result_date=date(2016, 1, 7),
+        report_datetime = Arrow.fromdatetime(datetime(2016, 1, 7)).datetime
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime, timepoint='T0')
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime, timepoint='T1')
+        subject_visits = LongitudinalRefset(
+            subject_identifier=self.subject_identifier,
+            visit_model=self.visit_model,
+            model=self.visit_model,
+            reference_model_cls=self.reference_model
+        ).order_by('report_datetime')
+
+        # hivresult
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivresult',
+            visit_code='T0',
+            hiv_result=NEG,
+            hiv_result_datetime=report_datetime)
+
+        # hivresultdocumentation
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivresultdocumentation',
+            visit_code='T0',
             result_recorded=NEG,
-            result_recorded_date=date(2015, 1, 6),
-        )
-        mommy.make_recipe(
-            'bcpp_subject.hivtestinghistory',
-            subject_visit=self.subject_visit_male_t0,
-            report_datetime=self.subject_visit_male_t0.report_datetime,
-            has_tested=YES,
-            when_hiv_test='1 to 5 months ago',
-            has_record=YES,
-            verbal_hiv_result=NEG,
-            other_record=NO
-        )
-        hiv_test_date = (
-            self.subject_visit_male_t0.report_datetime - relativedelta(days=10))
-        mommy.make_recipe(
-            'bcpp_subject.hivtestreview',
-            subject_visit=self.subject_visit_male_t0,
-            hiv_test_date=hiv_test_date.date(),
-            recorded_hiv_result=NEG)
-        mommy.make_recipe(
-            'bcpp_subject.subjectrequisition',
-            subject_visit=self.subject_visit_male_t0,
-            report_datetime=self.subject_visit_male_t0.report_datetime,
-            panel_name=MICROTUBE,
-            is_drawn=YES)
-        mommy.make_recipe(
-            'bcpp_subject.hivresult',
-            subject_visit=self.subject_visit_male_t0,
-            report_datetime=self.subject_visit_male_t0.report_datetime,
-            hiv_result_datetime=self.subject_visit_male_t0.report_datetime,
-            hiv_result=NEG,
-            insufficient_vol=NO)
+            result_date=Arrow.fromdate(date(2015, 1, 7)).date(),
+            result_doc_type='PIMS')
 
-        subject_visit = self.add_subject_visit_followup(
-            self.subject_visit_male_t0.household_member, T1)
+        obj = StatusHelper(visit=subject_visits[0])
 
-        report_datetime = subject_visit.report_datetime + timedelta(hours=10)
-        mommy.make_recipe(
-            'bcpp_subject.hivtestinghistory',
-            subject_visit=subject_visit,
-            report_datetime=report_datetime,
-            has_tested=YES,
-            when_hiv_test='1 to 5 months ago',
-            has_record=YES,
-            verbal_hiv_result=NEG,
-            other_record=NO
-        )
-
-        mommy.make_recipe(
-            'bcpp_subject.hivcareadherence',
-            first_positive=subject_visit.report_datetime -
-            relativedelta(days=100),
-            subject_visit=subject_visit,
-            report_datetime=report_datetime,
-            medical_care=NO,
-            ever_recommended_arv=NO,
-            ever_taken_arv=YES,
-            on_arv=NO,
-            arv_evidence=NO)
-        mommy.make_recipe(
-            'bcpp_subject.subjectrequisition',
-            subject_visit=subject_visit,
-            report_datetime=report_datetime,
-            panel_name=MICROTUBE,
-            is_drawn=YES)
-        mommy.make_recipe(
-            'bcpp_subject.hivresult',
-            subject_visit=subject_visit,
-            report_datetime=report_datetime,
-            hiv_result=NEG,
-            insufficient_vol=NO)
-
-        obj = StatusHelper(subject_visit)
         self.assertEqual(obj.prev_result_known, YES)
         self.assertEqual(obj.prev_result, NEG)
 
@@ -1155,16 +1329,46 @@ class TestStatusHelper(TestCase):
         """Assert evidence of arv treatment overrides a NEG previous
         result.
         """
-        self.model_values.update(
-            today_hiv_result=POS,
-            today_hiv_result_date=date(2016, 1, 7),
+        report_datetime = Arrow.fromdatetime(datetime(2016, 1, 7)).datetime
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime, timepoint='T0')
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime, timepoint='T1')
+        subject_visits = LongitudinalRefset(
+            subject_identifier=self.subject_identifier,
+            visit_model=self.visit_model,
+            model=self.visit_model,
+            reference_model_cls=self.reference_model
+        ).order_by('report_datetime')
+
+        # hivresult
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivresult',
+            visit_code='T0',
+            hiv_result=POS,
+            hiv_result_datetime=report_datetime)
+
+        # hivresultdocumentation
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivresultdocumentation',
+            visit_code='T0',
             result_recorded=NEG,
-            result_recorded_date=date(2015, 1, 6),
+            result_date=Arrow.fromdate(date(2015, 1, 7)).date(),
+            result_doc_type=ART_PRESCRIPTION)
+
+        # hivcareadherence
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivcareadherence',
+            visit_code='T1',
             ever_taken_arv=NO,
             on_arv=NO,
-            result_recorded_document=ART_PRESCRIPTION,
-        )
-        obj = StatusHelper(self.visit, model_values=self.model_values)
+            arv_evidence=NO)
+
+        obj = StatusHelper(visit=subject_visits[0])
+
         self.assertEqual(obj.final_hiv_status, POS)
         self.assertEqual(obj.current.arv_evidence, YES)
         self.assertEqual(obj.final_arv_status, DEFAULTER)
@@ -1173,95 +1377,117 @@ class TestStatusHelper(TestCase):
         """Assert if ever_taken_arv = NO and no response for evidence
         of ARV treatment, final_arv_status=NAIVE.
         """
-        self.model_values.update(
-            today_hiv_result=POS,
-            today_hiv_result_date=date(2016, 1, 7),
+        report_datetime = Arrow.fromdatetime(datetime(2016, 1, 7)).datetime
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime, timepoint='T0')
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime, timepoint='T1')
+        subject_visits = LongitudinalRefset(
+            subject_identifier=self.subject_identifier,
+            visit_model=self.visit_model,
+            model=self.visit_model,
+            reference_model_cls=self.reference_model
+        ).order_by('report_datetime')
+
+        # hivresult
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivresult',
+            visit_code='T0',
+            hiv_result=POS,
+            hiv_result_datetime=report_datetime)
+
+        # hivresultdocumentation
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivresultdocumentation',
+            visit_code='T0',
             result_recorded=NEG,
-            result_recorded_date=date(2015, 1, 6),
+            result_date=Arrow.fromdate(date(2015, 1, 7)).date(),
+            result_doc_type='?')
+
+        # hivcareadherence
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivcareadherence',
+            visit_code='T0',
             ever_taken_arv=NO,
-            on_arv=NO,
-        )
-        obj = StatusHelper(self.visit, model_values=self.model_values)
+            on_arv=NO)
+
+        obj = StatusHelper(visit=subject_visits[0])
         self.assertEqual(obj.final_hiv_status, POS)
         self.assertIsNone(obj.current.arv_evidence)
         self.assertEqual(obj.final_arv_status, NAIVE)
 
-    @tag('model_data')
     def test_arv_status_naive1(self):
         """Assert evidence of arv treatment overrides a NEG previous
         result.
         """
-        mommy.make_recipe(
-            'bcpp_subject.hivtestinghistory',
-            subject_visit=self.subject_visit_male_t0,
-            report_datetime=self.subject_visit_male_t0.report_datetime,
-            has_tested=YES,
-            when_hiv_test='1 to 5 months ago',
-            has_record=YES,
-            verbal_hiv_result=NEG,
-            other_record=NO
-        )
-        hiv_test_date = (
-            self.subject_visit_male_t0.report_datetime - relativedelta(days=10))
-        mommy.make_recipe(
-            'bcpp_subject.hivtestreview',
-            subject_visit=self.subject_visit_male_t0,
-            hiv_test_date=hiv_test_date.date(),
-            recorded_hiv_result=NEG)
-        mommy.make_recipe(
-            'bcpp_subject.subjectrequisition',
-            subject_visit=self.subject_visit_male_t0,
-            report_datetime=self.subject_visit_male_t0.report_datetime,
-            panel_name=MICROTUBE,
-            is_drawn=YES)
-        mommy.make_recipe(
-            'bcpp_subject.hivresult',
-            subject_visit=self.subject_visit_male_t0,
-            report_datetime=self.subject_visit_male_t0.report_datetime,
-            hiv_result_datetime=self.subject_visit_male_t0.report_datetime,
-            hiv_result=NEG,
-            insufficient_vol=NO)
+        report_datetime = Arrow.fromdatetime(datetime(2016, 1, 7)).datetime
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime, timepoint='T0')
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime + relativedelta(years=1), timepoint='T1')
+        subject_visits = LongitudinalRefset(
+            subject_identifier=self.subject_identifier,
+            visit_model=self.visit_model,
+            model=self.visit_model,
+            reference_model_cls=self.reference_model
+        ).order_by('report_datetime')
 
-        subject_visit = self.add_subject_visit_followup(
-            self.subject_visit_male_t0.household_member, T1)
-
-        report_datetime = subject_visit.report_datetime + timedelta(hours=10)
-        mommy.make_recipe(
-            'bcpp_subject.hivtestinghistory',
-            subject_visit=subject_visit,
+        # hivresult
+        self.reference_helper.create_for_model(
             report_datetime=report_datetime,
+            model='hivresult',
+            visit_code='T0',
+            hiv_result=NEG,
+            hiv_result_datetime=report_datetime)
+
+        # hivtestinghistory
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivtestinghistory',
+            visit_code='T0',
+            other_record=NO,
             has_tested=YES,
-            when_hiv_test='1 to 5 months ago',
-            has_record=YES,
-            verbal_hiv_result=POS,
-            other_record=NO
-        )
-        mommy.make_recipe(
-            'bcpp_subject.hivcareadherence',
-            first_positive=subject_visit.report_datetime -
-            relativedelta(days=100),
-            subject_visit=subject_visit,
-            report_datetime=subject_visit.report_datetime,
-            medical_care=NO,
-            ever_recommended_arv=NO,
+            verbal_hiv_result=NEG)
+
+        # hivtestreview
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivtestreview',
+            visit_code='T0',
+            recorded_hiv_result=NEG,
+            hiv_test_date=(report_datetime - relativedelta(days=10)).date())
+
+        # T1
+        # hivresult
+        self.reference_helper.create_for_model(
+            report_datetime=subject_visits[1].report_datetime,
+            model='hivresult',
+            visit_code='T1',
+            hiv_result=POS,
+            hiv_result_datetime=report_datetime)
+
+        # hivtestinghistory
+        self.reference_helper.create_for_model(
+            report_datetime=subject_visits[1].report_datetime,
+            model='hivtestinghistory',
+            visit_code='T1',
+            other_record=NO,
+            has_tested=YES,
+            verbal_hiv_result=POS)
+
+        # hivcareadherence
+        self.reference_helper.create_for_model(
+            report_datetime=subject_visits[1].report_datetime,
+            model='hivcareadherence',
+            visit_code='T1',
             ever_taken_arv=NO,
             on_arv=NO,
             arv_evidence=NO)
 
-        mommy.make_recipe(
-            'bcpp_subject.subjectrequisition',
-            subject_visit=subject_visit,
-            report_datetime=report_datetime,
-            panel_name=MICROTUBE,
-            is_drawn=YES)
-        mommy.make_recipe(
-            'bcpp_subject.hivresult',
-            subject_visit=subject_visit,
-            report_datetime=report_datetime,
-            hiv_result=POS,
-            insufficient_vol=NO)
-
-        obj = StatusHelper(subject_visit)
+        obj = StatusHelper(visit=subject_visits[1])
         self.assertEqual(obj.final_hiv_status, POS)
         self.assertEqual(obj.current.arv_evidence, NO)
         self.assertEqual(obj.final_arv_status, NAIVE)
@@ -1270,96 +1496,120 @@ class TestStatusHelper(TestCase):
         """Assert final_arv_status is DEFAULTER for POS if responded as
         never having taken ARV but we found evidence.
         """
-        self.model_values.update(
-            today_hiv_result=POS,
-            today_hiv_result_date=date(2016, 1, 7),
+        report_datetime = Arrow.fromdatetime(datetime(2016, 1, 7)).datetime
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime, timepoint='T0')
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime + relativedelta(years=1), timepoint='T1')
+        subject_visits = LongitudinalRefset(
+            subject_identifier=self.subject_identifier,
+            visit_model=self.visit_model,
+            model=self.visit_model,
+            reference_model_cls=self.reference_model
+        ).order_by('report_datetime')
+
+        # hivresult
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivresult',
+            visit_code='T0',
+            hiv_result=POS,
+            hiv_result_datetime=report_datetime)
+
+        # hivresultdocumentation
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivresultdocumentation',
+            visit_code='T0',
             result_recorded=NEG,
-            result_recorded_date=date(2015, 1, 6),
+            result_date=Arrow.fromdate(date(2015, 1, 7)).date(),
+            result_doc_type='?')
+
+        # hivcareadherence
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivcareadherence',
+            visit_code='T0',
             ever_taken_arv=NO,
             on_arv=NO,
-            arv_evidence=YES
-        )
-        obj = StatusHelper(self.visit, model_values=self.model_values)
+            arv_evidence=YES)
+
+        obj = StatusHelper(visit=subject_visits[0])
         self.assertEqual(obj.final_hiv_status, POS)
         self.assertEqual(obj.current.arv_evidence, YES)
         self.assertEqual(obj.final_arv_status, DEFAULTER)
 
-    @tag('model_data')
     def test_arv_status_with_evidence1(self):
         """Assert final_arv_status is DEFAULTER for POS if responded as
         never having taken ARV but we found evidence.
         """
-        mommy.make_recipe(
-            'bcpp_subject.hivtestinghistory',
-            subject_visit=self.subject_visit_male_t0,
-            report_datetime=self.subject_visit_male_t0.report_datetime,
-            has_tested=YES,
-            when_hiv_test='1 to 5 months ago',
-            has_record=YES,
-            verbal_hiv_result=NEG,
-            other_record=NO
-        )
-        hiv_test_date = (
-            self.subject_visit_male_t0.report_datetime - relativedelta(days=10))
-        mommy.make_recipe(
-            'bcpp_subject.hivtestreview',
-            subject_visit=self.subject_visit_male_t0,
-            hiv_test_date=hiv_test_date.date(),
-            recorded_hiv_result=NEG)
-        mommy.make_recipe(
-            'bcpp_subject.subjectrequisition',
-            subject_visit=self.subject_visit_male_t0,
-            report_datetime=self.subject_visit_male_t0.report_datetime,
-            panel_name=MICROTUBE,
-            is_drawn=YES)
-        mommy.make_recipe(
-            'bcpp_subject.hivresult',
-            subject_visit=self.subject_visit_male_t0,
-            report_datetime=self.subject_visit_male_t0.report_datetime,
-            hiv_result_datetime=self.subject_visit_male_t0.report_datetime,
-            hiv_result=NEG,
-            insufficient_vol=NO)
 
-        subject_visit = self.add_subject_visit_followup(
-            self.subject_visit_male_t0.household_member, T1)
+        report_datetime = Arrow.fromdatetime(datetime(2016, 1, 7)).datetime
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime, timepoint='T0')
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime + relativedelta(years=1), timepoint='T1')
+        subject_visits = LongitudinalRefset(
+            subject_identifier=self.subject_identifier,
+            visit_model=self.visit_model,
+            model=self.visit_model,
+            reference_model_cls=self.reference_model
+        ).order_by('report_datetime')
 
-        report_datetime = subject_visit.report_datetime + timedelta(hours=10)
-        mommy.make_recipe(
-            'bcpp_subject.hivtestinghistory',
-            subject_visit=subject_visit,
+        # hivresult
+        self.reference_helper.create_for_model(
             report_datetime=report_datetime,
+            model='hivresult',
+            visit_code='T0',
+            hiv_result=NEG,
+            hiv_result_datetime=report_datetime)
+
+        # hivtestinghistory
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivtestinghistory',
+            visit_code='T0',
+            other_record=NO,
             has_tested=YES,
-            when_hiv_test='1 to 5 months ago',
-            has_record=YES,
-            verbal_hiv_result=POS,
-            other_record=NO
-        )
-        mommy.make_recipe(
-            'bcpp_subject.hivcareadherence',
-            first_positive=subject_visit.report_datetime -
-            relativedelta(days=100),
-            subject_visit=subject_visit,
-            report_datetime=subject_visit.report_datetime,
-            medical_care=NO,
-            ever_recommended_arv=NO,
+            verbal_hiv_result=NEG)
+
+        # hivtestreview
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivtestreview',
+            visit_code='T0',
+            recorded_hiv_result=NEG,
+            hiv_test_date=(report_datetime - relativedelta(days=10)).date())
+
+        # T1
+
+        # hivresult
+        self.reference_helper.create_for_model(
+            report_datetime=subject_visits[1].report_datetime,
+            model='hivresult',
+            visit_code='T1',
+            hiv_result=POS,
+            hiv_result_datetime=subject_visits[1].report_datetime)
+
+        # hivtestinghistory
+        self.reference_helper.create_for_model(
+            report_datetime=subject_visits[1].report_datetime,
+            model='hivtestinghistory',
+            visit_code='T1',
+            other_record=NO,
+            has_tested=YES,
+            verbal_hiv_result=POS)
+
+        # hivcareadherence
+        self.reference_helper.create_for_model(
+            report_datetime=subject_visits[1].report_datetime,
+            model='hivcareadherence',
+            visit_code='T1',
             ever_taken_arv=NO,
             on_arv=NO,
             arv_evidence=NO)
 
-        mommy.make_recipe(
-            'bcpp_subject.subjectrequisition',
-            subject_visit=subject_visit,
-            report_datetime=report_datetime,
-            panel_name=MICROTUBE,
-            is_drawn=YES)
-        mommy.make_recipe(
-            'bcpp_subject.hivresult',
-            subject_visit=subject_visit,
-            report_datetime=report_datetime,
-            hiv_result=POS,
-            insufficient_vol=NO)
-
-        obj = StatusHelper(subject_visit)
+        obj = StatusHelper(visit=subject_visits[1])
         self.assertEqual(obj.final_hiv_status, POS)
         self.assertEqual(obj.current.arv_evidence, NO)
         self.assertEqual(obj.final_arv_status, NAIVE)
@@ -1367,172 +1617,215 @@ class TestStatusHelper(TestCase):
     def test_arv_status_on_art(self):
         """Assert POS on ART.
         """
-        self.model_values.update(
-            today_hiv_result=POS,
-            today_hiv_result_date=date(2016, 1, 7),
-            result_recorded=NEG,
-            result_recorded_date=date(2015, 1, 6),
-            ever_taken_arv=YES,
-            on_arv=YES,
-            arv_evidence=YES
-        )
-        obj = StatusHelper(self.visit, model_values=self.model_values)
-        self.assertEqual(obj.final_hiv_status, POS)
-        self.assertEqual(obj.current.arv_evidence, YES)
-        self.assertEqual(obj.final_arv_status, ON_ART)
+        report_datetime = Arrow.fromdatetime(datetime(2016, 1, 7)).datetime
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime, timepoint='T0')
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime + relativedelta(years=1), timepoint='T1')
+        subject_visits = LongitudinalRefset(
+            subject_identifier=self.subject_identifier,
+            visit_model=self.visit_model,
+            model=self.visit_model,
+            reference_model_cls=self.reference_model
+        ).order_by('report_datetime')
 
-    @tag('model_data')
-    def test_arv_status_on_art1(self):
-        """Assert final_arv_status is DEFAULTER for POS if responded as
-        never having taken ARV but we found evidence.
-        """
-        mommy.make_recipe(
-            'bcpp_subject.hivtestinghistory',
-            subject_visit=self.subject_visit_male_t0,
-            report_datetime=self.subject_visit_male_t0.report_datetime,
-            has_tested=YES,
-            when_hiv_test='1 to 5 months ago',
-            has_record=YES,
-            verbal_hiv_result=NEG,
-            other_record=NO
-        )
-        hiv_test_date = (
-            self.subject_visit_male_t0.report_datetime - relativedelta(days=10))
-        mommy.make_recipe(
-            'bcpp_subject.hivtestreview',
-            subject_visit=self.subject_visit_male_t0,
-            hiv_test_date=hiv_test_date.date(),
-            recorded_hiv_result=NEG)
-        mommy.make_recipe(
-            'bcpp_subject.subjectrequisition',
-            subject_visit=self.subject_visit_male_t0,
-            report_datetime=self.subject_visit_male_t0.report_datetime,
-            panel_name=MICROTUBE,
-            is_drawn=YES)
-        mommy.make_recipe(
-            'bcpp_subject.hivresult',
-            subject_visit=self.subject_visit_male_t0,
-            report_datetime=self.subject_visit_male_t0.report_datetime,
-            hiv_result_datetime=self.subject_visit_male_t0.report_datetime,
-            hiv_result=NEG,
-            insufficient_vol=NO)
-
-        subject_visit = self.add_subject_visit_followup(
-            self.subject_visit_male_t0.household_member, T1)
-
-        report_datetime = subject_visit.report_datetime + timedelta(hours=10)
-        mommy.make_recipe(
-            'bcpp_subject.hivtestinghistory',
-            subject_visit=subject_visit,
+        # hivresult
+        self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            has_tested=YES,
-            when_hiv_test='1 to 5 months ago',
-            has_record=YES,
-            verbal_hiv_result=POS,
-            other_record=NO
-        )
-        mommy.make_recipe(
-            'bcpp_subject.hivcareadherence',
-            first_positive=subject_visit.report_datetime -
-            relativedelta(days=100),
-            subject_visit=subject_visit,
-            report_datetime=subject_visit.report_datetime,
-            medical_care=YES,
-            ever_recommended_arv=YES,
+            model='hivresult',
+            visit_code='T0',
+            hiv_result=POS,
+            hiv_result_datetime=report_datetime)
+
+        # hivresultdocumentation
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivresultdocumentation',
+            visit_code='T0',
+            result_recorded=NEG,
+            result_date=Arrow.fromdate(date(2015, 1, 7)).date(),
+            result_doc_type='?')
+
+        # hivcareadherence
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivcareadherence',
+            visit_code='T0',
             ever_taken_arv=YES,
             on_arv=YES,
             arv_evidence=YES)
 
-        mommy.make_recipe(
-            'bcpp_subject.subjectrequisition',
-            subject_visit=subject_visit,
-            report_datetime=report_datetime,
-            panel_name=MICROTUBE,
-            is_drawn=YES)
-        mommy.make_recipe(
-            'bcpp_subject.hivresult',
-            subject_visit=subject_visit,
-            report_datetime=report_datetime,
-            hiv_result=POS,
-            insufficient_vol=NO)
+        obj = StatusHelper(visit=subject_visits[0])
+        self.assertEqual(obj.final_hiv_status, POS)
+        self.assertEqual(obj.current.arv_evidence, YES)
+        self.assertEqual(obj.final_arv_status, ON_ART)
 
-        obj = StatusHelper(subject_visit)
+    def test_arv_status_on_art1(self):
+        """Assert final_arv_status is DEFAULTER for POS if responded as
+        never having taken ARV but we found evidence.
+        """
+        report_datetime = Arrow.fromdatetime(datetime(2016, 1, 7)).datetime
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime, timepoint='T0')
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime + relativedelta(years=1), timepoint='T1')
+        subject_visits = LongitudinalRefset(
+            subject_identifier=self.subject_identifier,
+            visit_model=self.visit_model,
+            model=self.visit_model,
+            reference_model_cls=self.reference_model
+        ).order_by('report_datetime')
+
+        # hivresult
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivresult',
+            visit_code='T0',
+            hiv_result=NEG,
+            hiv_result_datetime=report_datetime)
+
+        # hivtestreview
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivtestreview',
+            visit_code='T0',
+            recorded_hiv_result=NEG,
+            hiv_test_date=(report_datetime - relativedelta(days=10)).date())
+
+        # hivtestinghistory
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivtestinghistory',
+            visit_code='T0',
+            other_record=NO,
+            has_tested=YES,
+            verbal_hiv_result=NEG)
+
+        # T1
+
+        # hivresult
+        self.reference_helper.create_for_model(
+            report_datetime=subject_visits[1].report_datetime,
+            model='hivresult',
+            visit_code='T1',
+            hiv_result=POS,
+            hiv_result_datetime=subject_visits[1].report_datetime)
+
+        # hivtestinghistory
+        self.reference_helper.create_for_model(
+            report_datetime=subject_visits[1].report_datetime,
+            model='hivtestinghistory',
+            visit_code='T1',
+            other_record=NO,
+            has_tested=YES,
+            verbal_hiv_result=POS)
+
+        # hivcareadherence
+        self.reference_helper.create_for_model(
+            report_datetime=subject_visits[1].report_datetime,
+            model='hivcareadherence',
+            visit_code='T1',
+            ever_taken_arv=YES,
+            on_arv=YES,
+            arv_evidence=YES)
+
+        obj = StatusHelper(visit=subject_visits[1])
         self.assertEqual(obj.final_hiv_status, POS)
         self.assertEqual(obj.current.arv_evidence, YES)
         self.assertEqual(obj.final_arv_status, ON_ART)
 
     def test_prev_result_pos5(self):
-        self.model_values.update(
-            elisa_hiv_result=POS,
-            elisa_hiv_result_date=date(2015, 11, 4),
-            today_hiv_result=IND,
-            today_hiv_result_date=date(2015, 10, 22),
-            recorded_hiv_result=None,
-            recorded_hiv_result_date=None,
-            result_recorded=None,
-            result_recorded_date=None,
-        )
-        obj = StatusHelper(self.visit, model_values=self.model_values)
+
+        report_datetime = Arrow.fromdatetime(datetime(2016, 1, 7)).datetime
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime, timepoint='T0')
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime + relativedelta(years=1), timepoint='T1')
+        subject_visits = LongitudinalRefset(
+            subject_identifier=self.subject_identifier,
+            visit_model=self.visit_model,
+            model=self.visit_model,
+            reference_model_cls=self.reference_model
+        ).order_by('report_datetime')
+
+        # hivresult
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivresult',
+            visit_code='T0',
+            hiv_result=IND,
+            hiv_result_datetime=report_datetime)
+
+        # elisaresult
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='elisahivresult',
+            visit_code='T0',
+            hiv_result=POS,
+            hiv_result_datetime=Arrow.fromdate(date(2015, 11, 4)).datetime)
+
+        obj = StatusHelper(visit=subject_visits[0])
         self.assertEqual(obj.final_hiv_status, POS)
         self.assertEqual(obj.final_hiv_status_date, date(2015, 11, 4))
 
-    @tag('test_default_at_enrollment_helper')
     def test_default_at_enrollment(self):
         """Previously enrollees at t0, t1 who are HIV-positive
         but were on ART, (i.e not arv_naive) at the time of enrollment.
         HivLinkageToCare NOT_REQUIRED 066-01990054-8
         """
-        mommy.make_recipe(
-            'bcpp_subject.hivtestinghistory',
-            subject_visit=self.subject_visit_male_t0,
-            report_datetime=self.get_utcnow(),
+        report_datetime = Arrow.fromdatetime(datetime(2016, 1, 7)).datetime
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime, timepoint='T0')
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime + relativedelta(years=1), timepoint='T1')
+        subject_visits = LongitudinalRefset(
+            subject_identifier=self.subject_identifier,
+            visit_model=self.visit_model,
+            model=self.visit_model,
+            reference_model_cls=self.reference_model
+        ).order_by('report_datetime')
+
+        # hivtestinghistory
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivtestinghistory',
+            visit_code='T0',
+            other_record=YES,
             has_tested=YES,
-            when_hiv_test='1 to 5 months ago',
-            has_record=YES,
-            verbal_hiv_result=POS,
-            other_record=YES
-        )
+            verbal_hiv_result=POS)
 
-        mommy.make_recipe(
-            'bcpp_subject.hivtestreview',
-            report_datetime=self.get_utcnow(),
-            subject_visit=self.subject_visit_male_t0,
-            hiv_test_date=self.get_utcnow() - timedelta(days=50),
-            recorded_hiv_result=POS)
+        # hivtestreview
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivtestreview',
+            visit_code='T0',
+            recorded_hiv_result=POS,
+            hiv_test_date=(report_datetime - relativedelta(days=50)).date())
 
-        mommy.make_recipe(
-            'bcpp_subject.hivcareadherence',
-            first_positive=self.get_utcnow(),
-            subject_visit=self.subject_visit_male_t0,
-            report_datetime=self.get_utcnow(),
-            medical_care=YES,
-            ever_recommended_arv=YES,
+        # hivcareadherence
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivcareadherence',
+            visit_code='T0',
             ever_taken_arv=YES,
             on_arv=NO,
-            arv_evidence=YES,  # this is the rule field
-        )
+            arv_evidence=YES)
 
-        obj = StatusHelper(self.subject_visit_male_t0)
+        obj = StatusHelper(visit=subject_visits[0])
         self.assertTrue(obj.defaulter_at_baseline)
 
-        subject_visit = self.add_subject_visit_followup(
-            self.subject_visit_male_t0.household_member, T1)
-
-        obj = StatusHelper(subject_visit)
+        obj = StatusHelper(visit=subject_visits[1])
         self.assertTrue(obj.defaulter_at_baseline)
 
-        # add HivCarAdherence,
-        mommy.make_recipe(
-            'bcpp_subject.hivcareadherence',
-            first_positive=subject_visit.report_datetime,
-            subject_visit=subject_visit,
-            report_datetime=subject_visit.report_datetime,
-            medical_care=YES,
-            ever_recommended_arv=YES,
+        # hivcareadherence
+        self.reference_helper.create_for_model(
+            report_datetime=subject_visits[1].report_datetime,
+            model='hivcareadherence',
+            visit_code='T1',
             ever_taken_arv=YES,
             on_arv=YES,
-            arv_evidence=YES,  # this is the rule field
-        )
-        obj = StatusHelper(subject_visit)
+            arv_evidence=YES)
+
+        obj = StatusHelper(visit=subject_visits[1])
         self.assertEqual(obj.final_arv_status, ON_ART)
         self.assertTrue(obj.defaulter_at_baseline)

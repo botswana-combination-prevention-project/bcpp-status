@@ -10,10 +10,11 @@ from .model_values import ModelValues
 class Values:
 
     def __init__(self, model_values=None, report_datetime=None,
-                 subject_identifier=None, visit_code=None):
+                 subject_identifier=None, visit_code=None, visit=None):
         self.subject_identifier = subject_identifier
         self.report_datetime = report_datetime
         self.visit_code = visit_code
+        self.subject_visit = visit
         for attr, value in model_values.items():
             if not hasattr(self, attr):
                 setattr(self, attr, value)
@@ -61,7 +62,8 @@ class StatusHelper:
                 model_values=model_values.values,
                 subject_identifier=self.subject_identifier,
                 visit_code=subject_visit.visit_code,
-                report_datetime=subject_visit.report_datetime)
+                report_datetime=subject_visit.report_datetime,
+                visit=subject_visit)
             setattr(self, subject_visit.visit_code, value_obj)
             if index == 0:
                 self.baseline = value_obj
