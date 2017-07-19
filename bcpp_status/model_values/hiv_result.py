@@ -1,6 +1,7 @@
 from .values import Values
 from edc_constants.constants import POS, NEG, DECLINED
 from pprint import pprint
+from arrow.arrow import Arrow
 
 
 class HivResult(Values):
@@ -38,15 +39,16 @@ class HivResult(Values):
                     break
         if not hiv_result:
             self.longitudinal_refset.order_by('report_datetime')
-            try:
-                hiv_result = self.longitudinal_refset.fieldset(
-                    'hiv_result').last()
-                hiv_result_datetime = self.longitudinal_refset.fieldset(
-                    'hiv_result_datetime').last()
-            except IndexError:
-                pass
+            hiv_result = self.longitudinal_refset.fieldset(
+                'hiv_result').last()
+            hiv_result_datetime = self.longitudinal_refset.fieldset(
+                'hiv_result_datetime').last()
         self.values.update(hiv_result=hiv_result)
         self.values.update(hiv_result_datetime=hiv_result_datetime)
         self.values.update(today_hiv_result=hiv_result)
-        self.values.update(today_hiv_result_date=hiv_result_datetime)
+        if hiv_result_datetime:
+            self.values.update(today_hiv_result_date=Arrow.fromdatetime(
+                hiv_result_datetime).date())
+        else:
+            self.values.update(today_hiv_result_date=None)
         self.values.update(declined=declined)
