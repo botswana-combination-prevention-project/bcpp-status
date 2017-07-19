@@ -1,19 +1,26 @@
 import sys
 
-from django.apps import apps as django_apps
-
 from edc_constants.constants import POS, YES, NEG, NO, NAIVE, UNK, IND, DEFAULTER, ON_ART
+from edc_reference import LongitudinalRefset
 
 from .constants import ART_PRESCRIPTION
 from .model_values import ModelValues
 
 
-class ValuesSetter:
+class Values:
 
-    def __init__(self, model_values):
+    def __init__(self, model_values=None, report_datetime=None,
+                 subject_identifier=None, visit_code=None):
+        self.subject_identifier = subject_identifier
+        self.report_datetime = report_datetime
+        self.visit_code = visit_code
         for attr, value in model_values.items():
             if not hasattr(self, attr):
                 setattr(self, attr, value)
+
+    def __repr__(self):
+        return (f'{self.__class__.__name__}(subject_identifier={self.subject_identifier},'
+                f'visit_code={self.visit_code},report_datetime={self.report_datetime})')
 
 
 class StatusHelper:
@@ -21,8 +28,15 @@ class StatusHelper:
     HIV status and ART status.
     """
 
-    def __init__(self, visit=None, subject_identifier=None, model_values=None, **kwargs):
+    model_values_cls = ModelValues
+    values_cls = Values
+    reference_model = 'edc_reference.reference'
+    visit_model = 'bcpp_subject.subjectvisit'
+
+    def __init__(self, visit=None, subject_identifier=None, **kwargs):
         self._subject_visits = None
+        self.baseline = None
+        self.current = None
         self.documented_pos = None
         self.documented_pos_date = None
         self.final_arv_status = None
@@ -37,24 +51,23 @@ class StatusHelper:
             self.subject_visit = visit
         else:
             self.subject_identifier = subject_identifier
-            self.subject_visit = self.subject_visits.last()
-        self.survey_schedule = self.subject_visit.survey_schedule_object.field_value
-        self.visit_schedule_name = self.subject_visit.visit_schedule_name
-        self.schedule_name = self.subject_visit.schedule_name
-        self.visit_code = self.subject_visit.visit_code
-        for index, subject_visit in enumerate(self.subject_visits):
-            value_setter = ValuesSetter(
-                model_values or ModelValues(subject_visit).__dict__)
-            setattr(self, subject_visit.visit_code, value_setter)
-            if index == 0:
-                self.baseline = value_setter
-            if subject_visit == self.subject_visit:
-                self.current = value_setter
+            self.subject_visit = self.subject_visits[-1:][0]  # last
 
-#         self.baseline = ValuesSetter(
-#             model_values or ModelValues(self.subject_visit, baseline=True).__dict__)
-#         self.current = ValuesSetter(
-#             model_values or ModelValues(self.subject_visit).__dict__)
+        for index, subject_visit in enumerate(self.subject_visits):
+            model_values = self.model_values_cls(
+                subject_identifier=self.subject_identifier,
+                report_datetime=subject_visit.report_datetime)
+            value_obj = self.values_cls(
+                model_values=model_values.values,
+                subject_identifier=self.subject_identifier,
+                visit_code=subject_visit.visit_code,
+                report_datetime=subject_visit.report_datetime)
+            setattr(self, subject_visit.visit_code, value_obj)
+            if index == 0:
+                self.baseline = value_obj
+            if subject_visit.visit_code == self.subject_visit.visit_code:
+                self.current = value_obj
+
         if self.current.result_recorded_document == ART_PRESCRIPTION:
             self.current.arv_evidence = YES
 
@@ -91,17 +104,19 @@ class StatusHelper:
     @property
     def subject_visits(self):
         if not self._subject_visits:
-            SubjectVisit = django_apps.get_model(
-                *'bcpp_subject.subjectvisit'.split('.'))
-            self._subject_visits = SubjectVisit.objects.filter(
-                subject_identifier=self.subject_identifier).order_by('report_datetime')
+            self._subject_visits = LongitudinalRefset(
+                subject_identifier=self.subject_identifier,
+                visit_model=self.visit_model,
+                model=self.visit_model,
+                reference_model_cls=self.reference_model
+            ).order_by('report_datetime')
         return self._subject_visits
 
     @property
     def previous_visit(self):
         visits = [obj for obj in self.subject_visits]
         for index, visit in enumerate(visits):
-            if visit == self.subject_visit:
+            if visit.visit_code == self.subject_visit.visit_code:
                 if index > 0:
                     try:
                         return visits[index - 1]
@@ -117,8 +132,7 @@ class StatusHelper:
             naive_at_baseline=self.naive_at_baseline,
             defaulter_at_baseline=self.defaulter_at_baseline,
             final_hiv_status_date=self.final_hiv_status_date,
-            prev_results_discordant=self.prev_results_discordant,
-        )
+            prev_results_discordant=self.prev_results_discordant)
         return options
 
     @property
