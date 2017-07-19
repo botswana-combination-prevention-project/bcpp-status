@@ -1,9 +1,10 @@
 from django.test import tag
 
-from edc_constants.constants import NO, YES
+from edc_constants.constants import NO, YES, NOT_APPLICABLE, DWTA
 
 from ..model_values import HivCareAdherence
 from .values_test_case import ValuesTestCase
+from edc_base.utils import get_utcnow
 
 
 class TestHivCareAdherence(ValuesTestCase):
@@ -42,3 +43,29 @@ class TestHivCareAdherence(ValuesTestCase):
             baseline=True)
         for key, value in self.longitudinal_values.get('first').items():
             self.assertEqual(value[0], values_obj.values.get(key))
+
+    def test_hivcareadherence_values2(self):
+        self.longitudinal_values.update(first={
+            'arv_evidence': (NOT_APPLICABLE, 'CharField'),
+            'ever_taken_arv': (DWTA, 'CharField'),
+            'on_arv': (NOT_APPLICABLE, 'CharField')})
+        self.reference_helper.create(
+            HivCareAdherence.model, self.visits, self.longitudinal_values)
+        values_obj = HivCareAdherence(
+            subject_identifier=self.subject_identifier,
+            report_datetime=self.visits.get('first'))
+        self.assertEqual(None, values_obj.values.get('arv_evidence'))
+        self.assertEqual(NO, values_obj.values.get('ever_taken_arv'))
+        self.assertEqual(None, values_obj.values.get('on_arv'))
+
+    def test_hivcareadherence_values3(self):
+        self.longitudinal_values.update(first={
+            'arv_evidence': (NO, 'CharField'),
+            'ever_taken_arv': (NO, 'CharField'),
+            'on_arv': (DWTA, 'CharField')})
+        self.reference_helper.create(
+            HivCareAdherence.model, self.visits, self.longitudinal_values)
+        values_obj = HivCareAdherence(
+            subject_identifier=self.subject_identifier,
+            report_datetime=self.visits.get('first'))
+        self.assertEqual(NO, values_obj.values.get('on_arv'))

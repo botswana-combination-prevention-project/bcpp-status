@@ -30,8 +30,8 @@ class HivResult(Values):
             # try to get the last NEG or DECLINED
             self.longitudinal_refset.order_by('-report_datetime')
             for index, result in enumerate(self.longitudinal_refset.fieldset('hiv_result')):
-                if hiv_result in [DECLINED, NEG]:
-                    if hiv_result == DECLINED:
+                if result in [DECLINED, NEG]:
+                    if result == DECLINED:
                         declined = True
                     hiv_result = result
                     hiv_result_datetime = self.longitudinal_refset.fieldset(

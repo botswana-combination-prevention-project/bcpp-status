@@ -110,7 +110,31 @@ class TestHivResult(ValuesTestCase):
         for key, value in self.longitudinal_values.get('first').items():
             self.assertEqual(value[0], values_obj.values.get(key))
 
-    def test_declined(self):
+    def test_declined1(self):
+        """Asserts always picks the first POS.
+        """
+        self.longitudinal_values = dict(
+            first={
+                'hiv_result': (DECLINED, 'CharField'),
+                'hiv_result_datetime': (
+                    get_utcnow() - relativedelta(years=4), 'DateTimeField')},
+            second={
+                'hiv_result': (DECLINED, 'CharField'),
+                'hiv_result_datetime': (
+                    get_utcnow() - relativedelta(years=3), 'DateTimeField')},
+            third={
+                'hiv_result': (DECLINED, 'CharField'),
+                'hiv_result_datetime': (
+                    get_utcnow() - relativedelta(years=2), 'DateTimeField')})
+        self.reference_helper.create(
+            HivResult.model, self.visits, self.longitudinal_values)
+        values_obj = HivResult(
+            subject_identifier=self.subject_identifier,
+            report_datetime=self.visits.get('first'))
+        for key, value in self.longitudinal_values.get('first').items():
+            self.assertEqual(value[0], values_obj.values.get(key))
+
+    def test_declined2(self):
         """Asserts always picks the first POS.
         """
         self.longitudinal_values = dict(

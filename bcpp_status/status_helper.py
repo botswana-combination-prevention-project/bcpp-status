@@ -127,17 +127,6 @@ class StatusHelper:
         return None
 
     @property
-    def options(self):
-        options = self.__dict__
-        options.update(
-            final_arv_status_baseline=self.final_arv_status_baseline,
-            naive_at_baseline=self.naive_at_baseline,
-            defaulter_at_baseline=self.defaulter_at_baseline,
-            final_hiv_status_date=self.final_hiv_status_date,
-            prev_results_discordant=self.prev_results_discordant)
-        return options
-
-    @property
     def final_arv_status_baseline(self):
         baseline_helper = self.__class__(visit=self.baseline.subject_visit)
         return baseline_helper.final_arv_status

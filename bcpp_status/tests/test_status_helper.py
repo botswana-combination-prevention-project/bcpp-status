@@ -1829,3 +1829,5 @@ class TestStatusHelper(TestCase):
         obj = StatusHelper(visit=subject_visits[1])
         self.assertEqual(obj.final_arv_status, ON_ART)
         self.assertTrue(obj.defaulter_at_baseline)
+        self.assertEqual(obj.final_arv_status_baseline, DEFAULTER)
+        self.assertFalse(obj.naive_at_baseline)
