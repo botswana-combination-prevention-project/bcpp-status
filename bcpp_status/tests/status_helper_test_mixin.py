@@ -83,10 +83,10 @@ class StatusHelperTestMixin:
         status_helper = StatusHelper(visit=visit)
         assert status_helper.final_hiv_status == POS
         if defaulter:
-            assert status_helper.final_art_status == DEFAULTER
+            assert status_helper.final_arv_status == DEFAULTER
         elif naive:
-            assert status_helper.final_art_status == NAIVE
+            assert status_helper.final_arv_status == NAIVE
         elif on_art:
-            assert status_helper.final_art_status == ON_ART
+            assert status_helper.final_arv_status == ON_ART
         else:
-            assert status_helper.final_art_status == NAIVE
+            assert status_helper.final_arv_status == NAIVE
