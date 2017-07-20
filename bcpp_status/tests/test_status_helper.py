@@ -1831,3 +1831,37 @@ class TestStatusHelper(TestCase):
         self.assertTrue(obj.defaulter_at_baseline)
         self.assertEqual(obj.final_arv_status_baseline, DEFAULTER)
         self.assertFalse(obj.naive_at_baseline)
+
+    def test_known_positive(self):
+        report_datetime = Arrow.fromdatetime(datetime(2016, 1, 7)).datetime
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime, timepoint='T0')
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime + relativedelta(years=1), timepoint='T1')
+        subject_visits = LongitudinalRefset(
+            subject_identifier=self.subject_identifier,
+            visit_model=self.visit_model,
+            model=self.visit_model,
+            reference_model_cls=self.reference_model
+        ).order_by('report_datetime')
+
+        # hivtestinghistory
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivtestinghistory',
+            visit_code='T0',
+            other_record=YES,
+            has_tested=YES,
+            verbal_hiv_result=POS)
+        obj = StatusHelper(visit=subject_visits[0])
+        self.assertFalse(obj.known_positive)
+
+        # hivtestreview
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime,
+            model='hivtestreview',
+            visit_code='T0',
+            recorded_hiv_result=POS,
+            hiv_test_date=(report_datetime - relativedelta(days=50)).date())
+        obj = StatusHelper(visit=subject_visits[0])
+        self.assertTrue(obj.known_positive)
