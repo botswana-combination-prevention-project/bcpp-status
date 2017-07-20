@@ -256,7 +256,8 @@ class StatusHelper:
             self.documented_pos = YES
             self.documented_pos_date = None
         elif (self.current.recorded_hiv_result not in (POS, NEG) and
-                not (self.current.other_record == YES and self.current.result_recorded == POS)):
+                not (self.current.other_record == YES
+                     and self.current.result_recorded == POS)):
             self.documented_pos = NO
             self.documented_pos_date = None
         else:
