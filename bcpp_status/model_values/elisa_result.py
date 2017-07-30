@@ -1,7 +1,8 @@
+from arrow.arrow import Arrow
+
 from edc_constants.constants import POS
 
 from .values import Values
-from arrow.arrow import Arrow
 
 
 class ElisaResult(Values):

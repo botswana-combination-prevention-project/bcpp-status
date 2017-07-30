@@ -1,7 +1,8 @@
-from .values import Values
-from edc_constants.constants import POS, NEG, DECLINED
-from pprint import pprint
 from arrow.arrow import Arrow
+
+from edc_constants.constants import POS, NEG, DECLINED
+
+from .values import Values
 
 
 class HivResult(Values):
