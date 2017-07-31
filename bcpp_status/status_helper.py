@@ -38,6 +38,7 @@ class StatusHelper:
         self._subject_visits = None
         self.baseline = None
         self.current = None
+        self.declined = None
         self.documented_pos = None
         self.documented_pos_date = None
         self.final_arv_status = None
