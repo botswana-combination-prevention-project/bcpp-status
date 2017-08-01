@@ -12,6 +12,7 @@ class HivResult(Values):
     """
 
     model = 'bcpp_subject.hivresult'
+    visit_model = 'bcpp_subject.subjectvisit'
     attrs = ['today_hiv_result', 'today_hiv_result_date', 'declined']
 
     def __init__(self, **kwargs):

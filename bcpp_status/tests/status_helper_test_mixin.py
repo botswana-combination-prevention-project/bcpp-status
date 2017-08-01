@@ -1,8 +1,8 @@
 from dateutil.relativedelta import relativedelta
+from edc_constants.constants import YES, NO, NAIVE, DEFAULTER, ON_ART
+from edc_constants.constants import POS, NEG, IND, UNK
 
-from edc_constants.constants import YES, NO, POS, NAIVE, DEFAULTER, ON_ART, NEG,\
-    UNK
-from bcpp_status.status_helper import StatusHelper
+from ..status_helper import StatusHelper
 
 
 class StatusHelperTestMixin:
@@ -78,7 +78,16 @@ class StatusHelperTestMixin:
                 hiv_test_date=(visit.report_datetime - relativedelta(days=50)).date())
             status_helper = StatusHelper(visit=visit)
             assert status_helper.final_hiv_status == NEG
+        elif result == IND:
+            # hivresult
+            self.reference_helper.create_for_model(
+                report_datetime=visit.report_datetime,
+                model='hivresult',
+                visit_code=visit.visit_code,
+                hiv_result=IND,
+                hiv_result_datetime=visit.report_datetime)
         else:
+            status_helper = StatusHelper(visit=visit)
             assert status_helper.final_hiv_status == UNK
 
     def prepare_art_status(self, visit=None, result=None,

@@ -9,6 +9,7 @@ class HivTestReview(Values):
     """
 
     model = 'bcpp_subject.hivtestreview'
+    visit_model = 'bcpp_subject.subjectvisit'
     attrs = ['recorded_hiv_result', 'recorded_hiv_result_date']
 
     def __init__(self, **kwargs):

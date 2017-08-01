@@ -1,10 +1,15 @@
 import sys
 
+from django.apps import apps as django_apps
 from edc_constants.constants import POS, YES, NEG, NO, NAIVE, UNK, IND, DEFAULTER, ON_ART
 from edc_reference import LongitudinalRefset
 
 from .constants import ART_PRESCRIPTION
 from .model_values import ModelValues
+
+
+class StatusHelperError(Exception):
+    pass
 
 
 class Values:
@@ -33,6 +38,7 @@ class StatusHelper:
     values_cls = Values
     reference_model = 'edc_reference.reference'
     visit_model = 'bcpp_subject.subjectvisit'
+    app_label = 'bcpp_subject'
 
     def __init__(self, visit=None, subject_identifier=None, **kwargs):
         self._subject_visits = None
@@ -47,18 +53,18 @@ class StatusHelper:
         self.prev_result = None
         self.prev_result_date = None
         self.prev_result_known = None
-
         if visit:
             self.subject_identifier = visit.subject_identifier
             self.subject_visit = visit
         else:
             self.subject_identifier = subject_identifier
             self.subject_visit = self.subject_visits[-1:][0]  # last
-
         for index, subject_visit in enumerate(self.subject_visits):
             model_values = self.model_values_cls(
                 subject_identifier=self.subject_identifier,
-                report_datetime=subject_visit.report_datetime)
+                report_datetime=subject_visit.report_datetime,
+                visit_model=self.visit_model,
+                app_label=self.app_label)
             value_obj = self.values_cls(
                 model_values=model_values.values,
                 subject_identifier=self.subject_identifier,
@@ -70,6 +76,17 @@ class StatusHelper:
                 self.baseline = value_obj
             if subject_visit.visit_code == self.subject_visit.visit_code:
                 self.current = value_obj
+
+        if not self.current:
+            Reference = django_apps.get_model('edc_reference.reference')
+            model = model = self.subject_visit._meta.label_lower
+            qs = Reference.objects.filter(
+                identifier=self.subject_identifier, model=model)
+            raise StatusHelperError(
+                'Unable to determine current visit. See reference model. '
+                f'Found {qs.count()} Reference records for {model}. '
+                f'Given subject_identifier={self.subject_identifier}, '
+                f'subject_visit={self.subject_visit.visit_code}. See LongitudinalRefset.')
 
         if self.current.result_recorded_document == ART_PRESCRIPTION:
             self.current.arv_evidence = YES
@@ -107,12 +124,13 @@ class StatusHelper:
     @property
     def subject_visits(self):
         if not self._subject_visits:
-            self._subject_visits = LongitudinalRefset(
+            opts = dict(
                 subject_identifier=self.subject_identifier,
                 visit_model=self.visit_model,
                 model=self.visit_model,
-                reference_model_cls=self.reference_model
-            ).order_by('report_datetime')
+                reference_model_cls=self.reference_model)
+            self._subject_visits = LongitudinalRefset(
+                **opts).order_by('report_datetime')
         return self._subject_visits
 
     @property

@@ -4,6 +4,7 @@ from .values import Values
 class HivTestingHistory(Values):
 
     model = 'bcpp_subject.hivtestinghistory'
+    visit_model = 'bcpp_subject.subjectvisit'
     attrs = ['self_reported_result', 'has_tested', 'other_record']
 
     def __init__(self, **kwargs):
