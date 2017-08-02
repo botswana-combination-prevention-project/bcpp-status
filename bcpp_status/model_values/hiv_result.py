@@ -19,7 +19,6 @@ class HivResult(Values):
         super().__init__(**kwargs)
         declined = None
         self.longitudinal_refset.order_by('hiv_result_datetime')
-        # try to get the first POS
         hiv_result = None
         hiv_result_datetime = None
         for index, result in enumerate(self.longitudinal_refset.fieldset('hiv_result')):
