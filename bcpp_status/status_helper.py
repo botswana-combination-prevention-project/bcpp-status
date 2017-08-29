@@ -1,11 +1,14 @@
+import json
 import sys
 
+from arrow.arrow import Arrow
 from django.apps import apps as django_apps
 from edc_constants.constants import POS, YES, NEG, NO, NAIVE, UNK, IND, DEFAULTER, ON_ART
 from edc_reference import LongitudinalRefset
 
 from .constants import ART_PRESCRIPTION
 from .model_values import ModelValues
+from django.core.serializers.json import DjangoJSONEncoder
 
 
 class StatusHelperError(Exception):
@@ -38,9 +41,11 @@ class StatusHelper:
     values_cls = Values
     reference_model = 'edc_reference.reference'
     visit_model = 'bcpp_subject.subjectvisit'
+    status_history_model = 'bcpp_status.statushistory'
     app_label = 'bcpp_subject'
 
-    def __init__(self, visit=None, subject_identifier=None, **kwargs):
+    def __init__(self, visit=None, subject_identifier=None, update_history=None, **kwargs):
+        update_history = True if update_history is None else update_history
         self._subject_visits = None
         self.baseline = None
         self.current = None
@@ -96,7 +101,8 @@ class StatusHelper:
         self._prepare_final_arv_status()
         self._prepare_previous_status_date_and_awareness()
         if self.previous_visit:
-            previous_helper = self.__class__(visit=self.previous_visit)
+            previous_helper = self.__class__(
+                visit=self.previous_visit, update_history=False)
             previous_result = previous_helper.final_hiv_status
             previous_result_known = YES if previous_helper.final_hiv_status else NO
             previous_result_date = previous_helper.final_hiv_status_date
@@ -120,6 +126,50 @@ class StatusHelper:
             self.prev_result == POS and self.prev_result_known == YES)
         self.has_tested = YES if YES in [
             self.baseline.has_tested, self.current.has_tested] else NO
+        if update_history:
+            self.update_status_history()
+
+    def update_status_history(self):
+        try:
+            model_cls = django_apps.get_model(self.status_history_model)
+        except LookupError:
+            pass
+        else:
+            model_cls.objects.create(
+                subject_identifier=self.subject_identifier,
+                status_date=Arrow.fromdatetime(
+                    self.subject_visit.report_datetime).date(),
+                final_hiv_status=self.final_hiv_status,
+                final_hiv_status_date=self.final_hiv_status_date,
+                final_arv_status=self.final_arv_status,
+                data=self.to_json())
+
+    def to_json(self):
+        data = {
+            'best_prev_result_date': self.best_prev_result_date,
+            'declined': self.declined,
+            'defaulter_at_baseline': self.defaulter_at_baseline,
+            'documented_pos': self.documented_pos,
+            'documented_pos_date': self.documented_pos_date,
+            'final_arv_status': self.final_arv_status,
+            'final_arv_status_baseline': self.final_arv_status_baseline,
+            'final_hiv_status': self.final_hiv_status,
+            'final_hiv_status_date': self.final_hiv_status_date,
+            'has_tested': self.has_tested,
+            'indeterminate': self.indeterminate,
+            'known_positive': self.known_positive,
+            'naive_at_baseline': self.naive_at_baseline,
+            'newly_diagnosed': self.newly_diagnosed,
+            'prev_result': self.prev_result,
+            'prev_result_date': self.prev_result_date,
+            'prev_result_known': self.prev_result_known,
+            'prev_results_discordant': self.prev_results_discordant,
+            'subject_identifier': self.subject_identifier,
+            'today_hiv_result': self.current.today_hiv_result,
+            'visit_code': self.subject_visit.visit_code,
+            'visit_date': Arrow.fromdatetime(self.subject_visit.report_datetime).date(),
+        }
+        return json.dumps(data, cls=DjangoJSONEncoder)
 
     @property
     def subject_visits(self):
@@ -147,7 +197,8 @@ class StatusHelper:
 
     @property
     def final_arv_status_baseline(self):
-        baseline_helper = self.__class__(visit=self.baseline.subject_visit)
+        baseline_helper = self.__class__(
+            visit=self.baseline.subject_visit, update_history=False)
         return baseline_helper.final_arv_status
 
     @property
@@ -156,7 +207,8 @@ class StatusHelper:
 
     @property
     def defaulter_at_baseline(self):
-        baseline_helper = self.__class__(visit=self.baseline.subject_visit)
+        baseline_helper = self.__class__(
+            visit=self.baseline.subject_visit, update_history=False)
         return baseline_helper.final_arv_status == DEFAULTER
 
     @property
