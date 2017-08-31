@@ -11,6 +11,7 @@ class ElisaResult(Values):
     """
 
     model = 'bcpp_subject.elisahivresult'
+    visit_model = 'bcpp_subject.subjectvisit'
     attrs = ['elisa_hiv_result', 'elisa_hiv_result_date']
 
     def __init__(self, **kwargs):

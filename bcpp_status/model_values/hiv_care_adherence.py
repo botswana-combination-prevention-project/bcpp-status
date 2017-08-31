@@ -6,6 +6,7 @@ from .values import Values
 class HivCareAdherence(Values):
 
     model = 'bcpp_subject.hivcareadherence'
+    visit_model = 'bcpp_subject.subjectvisit'
     attrs = ['arv_evidence', 'ever_taken_arv', 'on_arv']
 
     def __init__(self, **kwargs):

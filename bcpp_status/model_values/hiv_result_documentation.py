@@ -9,6 +9,7 @@ class HivResultDocumentation(Values):
     """
 
     model = 'bcpp_subject.hivresultdocumentation'
+    visit_model = 'bcpp_subject.subjectvisit'
     attrs = ['result_recorded', 'result_recorded_date',
              'result_recorded_document']
 
