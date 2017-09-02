@@ -1,20 +1,16 @@
 from faker import Faker
 from datetime import date
-
 from django.test import TestCase, tag
-
 from edc_base.utils import get_utcnow
 from edc_constants.constants import NEG, POS, UNK, YES, NAIVE
 from edc_reference.tests import ReferenceTestHelper
 
 from ..status_helper import StatusHelper
-from bcpp_status.models import StatusHistory
-from pprint import pprint
+from ..models import StatusHistory
 
 fake = Faker()
 
 
-@tag('1')
 class TestStatusHistory(TestCase):
 
     reference_helper_cls = ReferenceTestHelper
@@ -76,14 +72,12 @@ class TestStatusHistory(TestCase):
 
         status_helper = StatusHelper(
             subject_identifier=self.subject_identifier,
-            model_values=self.model_values)
+            model_values=self.model_values,
+            update_history=True)
 
         self.assertGreater(StatusHistory.objects.all().count(), 0)
+
         obj = StatusHistory.objects.get(
             subject_identifier=status_helper.subject_identifier)
-        pprint(obj.__dict__)
-        pprint(obj.to_dict())
-#         self.assertEqual(status_helper.final_hiv_status, POS)
-#         self.assertEqual(status_helper.final_arv_status, NAIVE)
-#         self.assertEqual(status_helper.prev_result_known, YES)
-#         self.assertEqual(status_helper.prev_result, NEG)
+        self.assertEqual(obj.final_hiv_status, POS)
+        self.assertEqual(obj.final_arv_status, NAIVE)

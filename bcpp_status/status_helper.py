@@ -3,12 +3,13 @@ import sys
 
 from arrow.arrow import Arrow
 from django.apps import apps as django_apps
+from django.core.serializers.json import DjangoJSONEncoder
+from django.core.exceptions import ObjectDoesNotExist
 from edc_constants.constants import POS, YES, NEG, NO, NAIVE, UNK, IND, DEFAULTER, ON_ART
 from edc_reference import LongitudinalRefset
 
 from .constants import ART_PRESCRIPTION
 from .model_values import ModelValues
-from django.core.serializers.json import DjangoJSONEncoder
 
 
 class StatusHelperError(Exception):
@@ -44,8 +45,8 @@ class StatusHelper:
     status_history_model = 'bcpp_status.statushistory'
     app_label = 'bcpp_subject'
 
-    def __init__(self, visit=None, subject_identifier=None, update_history=None, **kwargs):
-        update_history = True if update_history is None else update_history
+    def __init__(self, visit=None, subject_identifier=None, update_history=None,
+                 source_object_name=None, **kwargs):
         self._subject_visits = None
         self.baseline = None
         self.current = None
@@ -58,6 +59,7 @@ class StatusHelper:
         self.prev_result = None
         self.prev_result_date = None
         self.prev_result_known = None
+        self.source_object_name = source_object_name  # source object using this class
         if visit:
             self.subject_identifier = visit.subject_identifier
             self.subject_visit = visit
@@ -129,20 +131,23 @@ class StatusHelper:
         if update_history:
             self.update_status_history()
 
-    def update_status_history(self):
+    def update_status_history(self, source=None):
         try:
             model_cls = django_apps.get_model(self.status_history_model)
         except LookupError:
             pass
         else:
-            model_cls.objects.create(
+            opts = dict(
                 subject_identifier=self.subject_identifier,
                 status_date=Arrow.fromdatetime(
                     self.subject_visit.report_datetime).date(),
                 final_hiv_status=self.final_hiv_status,
                 final_hiv_status_date=self.final_hiv_status_date,
-                final_arv_status=self.final_arv_status,
-                data=self.to_json())
+                final_arv_status=self.final_arv_status)
+            try:
+                model_cls.objects.get(**opts)
+            except ObjectDoesNotExist:
+                model_cls.objects.create(data=self.to_json(), **opts)
 
     def to_json(self):
         data = {
@@ -165,6 +170,7 @@ class StatusHelper:
             'prev_result_known': self.prev_result_known,
             'prev_results_discordant': self.prev_results_discordant,
             'subject_identifier': self.subject_identifier,
+            'source_object_name': self.source_object_name,
             'today_hiv_result': self.current.today_hiv_result,
             'visit_code': self.subject_visit.visit_code,
             'visit_date': Arrow.fromdatetime(self.subject_visit.report_datetime).date(),
