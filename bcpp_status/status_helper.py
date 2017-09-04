@@ -131,7 +131,7 @@ class StatusHelper:
         self.current_hiv_result = self.current.today_hiv_result
         self.current_arv_evidence = self.current.arv_evidence
         if update_history:
-            self.history_obj = self.update_status_history()
+            self.update_status_history()
 
     def update_status_history(self):
         try:

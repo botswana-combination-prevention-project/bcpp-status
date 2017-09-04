@@ -141,6 +141,57 @@ class TestStatusHelper(TestCase):
 
         self.assertTrue(StatusDbHelper(visit=subject_visits[0]))
 
+    def test_init_with_data_and_db_helper_creates(self):
+        report_datetime = get_utcnow()
+
+        self.reference_helper.create_visit(
+            report_datetime=report_datetime, timepoint='bhs')
+
+        # hivcareadherence
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime, model='hivcareadherence', visit_code='bhs',
+            arv_evidence=(YES, 'CharField'),
+            on_arv=(YES, 'CharField'),
+            ever_taken_arv=(YES, 'CharField'))
+
+        # hivtestinghistory
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime, model='hivtestinghistory', visit_code='bhs',
+            verbal_hiv_result=(POS, 'CharField'),
+            has_tested=(YES, 'CharField'),
+            other_record=(YES, 'CharField'),
+        )
+
+        # elisahivresult
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime, model='elisahivresult', visit_code='bhs',
+            hiv_result=(POS, 'CharField'),
+            hiv_result_datetime=(get_utcnow(), 'DateTimeField'))
+
+        # hivresultdocumentation
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime, model='hivresultdocumentation', visit_code='bhs',
+            result_recorded=(POS, 'CharField'),
+            result_date=(get_utcnow(), 'DateTimeField'),
+            result_doc_type=(YES, 'CharField'))
+
+        # hivtestreview
+        self.reference_helper.create_for_model(
+            report_datetime=report_datetime, model='hivtestreview', visit_code='bhs',
+            recorded_hiv_result=(POS, 'CharField'),
+            hiv_test_date=(get_utcnow(), 'DateTimeField'),
+            result_doc_type=(YES, 'CharField'))
+
+        subject_visits = LongitudinalRefset(
+            subject_identifier=self.subject_identifier,
+            visit_model=self.visit_model,
+            model=self.visit_model,
+            reference_model_cls=self.reference_model
+        ).order_by('report_datetime')
+
+        self.assertTrue(StatusHelper(visit=subject_visits[0]))
+        self.assertTrue(StatusDbHelper(visit=subject_visits[0]))
+
     def test_assert_baseline_pos(self):
         report_datetime = get_utcnow()
         self.reference_helper.create_visit(

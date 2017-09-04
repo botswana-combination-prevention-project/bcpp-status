@@ -2,7 +2,8 @@ import json
 
 from datetime import datetime
 from bcpp_status.models import StatusHistory
-from django.core.exceptions import MultipleObjectsReturned
+from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
+from bcpp_status.status_helper import StatusHelper
 
 
 class Current:
@@ -25,12 +26,7 @@ class StatusDbHelper:
             self.subject_visit = visit
             self.visit_code = visit.visit_code
             self.report_date = visit.report_datetime.date()
-            try:
-                history_obj = StatusHistory.objects.get(
-                    status_date=self.report_date)
-            except MultipleObjectsReturned:
-                history_obj = StatusHistory.objects.filter(
-                    status_date=self.report_date).order_by('created').last()
+            history_obj = self.get_or_create_history(visit=visit)
         elif subject_identifier:
             self.subject_identifier = subject_identifier
             history_obj = StatusHistory.objects.filter(
@@ -45,3 +41,15 @@ class StatusDbHelper:
         self.current = Current(
             hiv_result=self.current_hiv_result,
             arv_evidence=self.current_arv_evidence)
+
+    def get_or_create_history(self, visit=None):
+        try:
+            history_obj = StatusHistory.objects.get(
+                status_date=self.report_date)
+        except ObjectDoesNotExist:
+            history_obj = StatusHelper(
+                visit=visit, update_history=True).history_obj
+        except MultipleObjectsReturned:
+            history_obj = StatusHistory.objects.filter(
+                status_date=self.report_date).order_by('created').last()
+        return history_obj
