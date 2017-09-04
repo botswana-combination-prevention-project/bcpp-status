@@ -2,7 +2,7 @@ from django.test import TestCase, tag
 from edc_base.utils import get_utcnow
 from edc_reference.tests import ReferenceTestHelper
 
-from ..model_values import ModelValues
+from ..model_data import ModelData
 
 
 class TestModelValues(TestCase):
@@ -18,7 +18,7 @@ class TestModelValues(TestCase):
     def test_assert_attrs_exist(self):
         self.reference_helper.create_visit(
             report_datetime=get_utcnow(), timepoint='first')
-        model_values = ModelValues(
+        model_data = ModelData(
             subject_identifier=self.subject_identifier,
             report_datetime=get_utcnow(),
             baseline=True)
@@ -40,4 +40,4 @@ class TestModelValues(TestCase):
             'today_hiv_result_date': None,
         }
         for attr in attrs:
-            self.assertIn(attr, model_values.values)
+            self.assertIn(attr, model_data.values)

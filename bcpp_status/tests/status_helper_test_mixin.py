@@ -151,7 +151,6 @@ class StatusHelperTestMixin:
             ever_taken_arv=ever_taken_arv,
             on_arv=on_arv,
             arv_evidence=arv_evidence)
-
         status_helper = StatusHelper(visit=visit, update_history=True)
 
         assert status_helper.final_hiv_status == POS

@@ -92,7 +92,6 @@ class TestStatusHelper(TestCase):
 
         self.validate(subject_visits=subject_visits)
 
-    @tag('1')
     def test_init_with_data(self):
         report_datetime = get_utcnow()
 

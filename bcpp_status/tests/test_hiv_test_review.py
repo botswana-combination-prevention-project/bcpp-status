@@ -3,7 +3,7 @@ from django.test import tag
 from edc_base.utils import get_utcnow
 from edc_constants.constants import POS
 
-from ..model_values import HivResultDocumentation
+from ..model_data import HivResultDocumentation
 from .values_test_case import ValuesTestCase
 
 

@@ -1,5 +1,4 @@
 from django.apps import apps as django_apps
-
 from edc_reference.site import site_reference_configs
 
 from .elisa_result import ElisaResult
@@ -10,11 +9,11 @@ from .hiv_test_review import HivTestReview
 from .hiv_testing_history import HivTestingHistory
 
 
-class ModelValuesError(Exception):
+class ModelDataError(Exception):
     pass
 
 
-class ModelValues:
+class ModelData:
 
     """A class that fetches raw model values for the status
     helper class.
@@ -74,5 +73,8 @@ class ModelValues:
                      'today_hiv_result',
                      'today_hiv_result_date']:
             if attr not in self.values:
-                raise ModelValuesError(
+                raise ModelDataError(
                     f'Attribute missing from values. Got {attr}')
+
+    def __iter__(self):
+        return iter(self.values.items())

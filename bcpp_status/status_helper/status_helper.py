@@ -4,32 +4,16 @@ import sys
 from arrow.arrow import Arrow
 from django.apps import apps as django_apps
 from django.core.serializers.json import DjangoJSONEncoder
-from edc_constants.constants import POS, YES, NEG, NO, NAIVE, UNK, IND, DEFAULTER, ON_ART
+from edc_base.utils import get_utcnow
 from edc_reference import LongitudinalRefset
 
-from .constants import ART_PRESCRIPTION
-from .model_values import ModelValues
+from ..constants import ART_PRESCRIPTION, NAIVE, DEFAULTER, ON_ART
+from ..constants import POS, YES, NEG, NO, UNK, IND
+from .status_values import StatusValues
 
 
 class StatusHelperError(Exception):
     pass
-
-
-class Values:
-
-    def __init__(self, model_values=None, report_datetime=None,
-                 subject_identifier=None, visit_code=None, visit=None):
-        self.subject_identifier = subject_identifier
-        self.report_datetime = report_datetime
-        self.visit_code = visit_code
-        self.subject_visit = visit
-        for attr, value in model_values.items():
-            if not hasattr(self, attr):
-                setattr(self, attr, value)
-
-    def __repr__(self):
-        return (f'{self.__class__.__name__}(subject_identifier={self.subject_identifier},'
-                f'visit_code={self.visit_code},report_datetime={self.report_datetime})')
 
 
 class StatusHelper:
@@ -37,19 +21,22 @@ class StatusHelper:
     HIV status and ART status.
     """
 
-    model_values_cls = ModelValues
-    values_cls = Values
     reference_model = 'edc_reference.reference'
     visit_model = 'bcpp_subject.subjectvisit'
     status_history_model = 'bcpp_status.statushistory'
     app_label = 'bcpp_subject'
 
+    baseline_cls = StatusValues
+    current_cls = StatusValues
+
     def __init__(self, visit=None, subject_identifier=None, update_history=None,
                  source_object_name=None, **kwargs):
+        self._best_prev_result_date = None
+        self._current = None
+        self._defaulter_at_baseline = None
+        self._final_arv_status_baseline = None
         self._subject_visits = None
         self.history_obj = None
-        self.baseline = None
-        self.current = None
         self.declined = None
         self.documented_pos = None
         self.documented_pos_date = None
@@ -60,40 +47,15 @@ class StatusHelper:
         self.prev_result_date = None
         self.prev_result_known = None
         self.source_object_name = source_object_name  # source object using this class
+
         if visit:
             self.subject_identifier = visit.subject_identifier
             self.subject_visit = visit
         else:
             self.subject_identifier = subject_identifier
             self.subject_visit = self.subject_visits[-1:][0]  # last
-        for index, subject_visit in enumerate(self.subject_visits):
-            model_values = self.model_values_cls(
-                subject_identifier=self.subject_identifier,
-                report_datetime=subject_visit.report_datetime,
-                visit_model=self.visit_model,
-                app_label=self.app_label)
-            value_obj = self.values_cls(
-                model_values=model_values.values,
-                subject_identifier=self.subject_identifier,
-                visit_code=subject_visit.visit_code,
-                report_datetime=subject_visit.report_datetime,
-                visit=subject_visit)
-            setattr(self, subject_visit.visit_code, value_obj)
-            if index == 0:
-                self.baseline = value_obj
-            if subject_visit.visit_code == self.subject_visit.visit_code:
-                self.current = value_obj
 
-        if not self.current:
-            Reference = django_apps.get_model('edc_reference.reference')
-            model = model = self.subject_visit._meta.label_lower
-            qs = Reference.objects.filter(
-                identifier=self.subject_identifier, model=model)
-            raise StatusHelperError(
-                'Unable to determine current visit. See reference model. '
-                f'Found {qs.count()} Reference records for {model}. '
-                f'Given subject_identifier={self.subject_identifier}, '
-                f'subject_visit={self.subject_visit.visit_code}. See LongitudinalRefset.')
+        self.baseline = self.baseline_cls(visit=self.subject_visits[0])
 
         if self.current.result_recorded_document == ART_PRESCRIPTION:
             self.current.arv_evidence = YES
@@ -135,9 +97,30 @@ class StatusHelper:
         self.current_arv_evidence = self.current.arv_evidence
         self.visit_code = self.subject_visit.visit_code
         self.visit_date = self.subject_visit.report_datetime.date()
-
         if update_history:
             self.update_status_history()
+
+    @property
+    def current(self):
+        if not self._current:
+            for subject_visit in self.subject_visits:
+                if subject_visit.visit_code == self.subject_visit.visit_code:
+                    self._current = self.current_cls(visit=subject_visit)
+            if not self._current:
+                Reference = django_apps.get_model('edc_reference.reference')
+                model = model = self.subject_visit._meta.label_lower
+                qs = Reference.objects.filter(
+                    identifier=self.subject_identifier, model=model)
+                raise StatusHelperError(
+                    'Unable to determine current visit. See reference model. '
+                    f'Found {qs.count()} Reference records for {model}. '
+                    f'Given subject_identifier={self.subject_identifier}, '
+                    f'subject_visit={self.subject_visit.visit_code}. See LongitudinalRefset.')
+        return self._current
+
+    @property
+    def previous(self):
+        pass
 
     def update_status_history(self):
         try:
@@ -149,6 +132,7 @@ class StatusHelper:
                 subject_identifier=self.subject_identifier,
                 status_date=Arrow.fromdatetime(
                     self.subject_visit.report_datetime).date(),
+                timepoint=self.subject_visit.visit_code,
                 final_hiv_status=self.final_hiv_status,
                 final_hiv_status_date=self.final_hiv_status_date,
                 final_arv_status=self.final_arv_status)
@@ -160,11 +144,8 @@ class StatusHelper:
     @property
     def _data(self):
         return {
+            '_created': get_utcnow(),
             'best_prev_result_date': self.best_prev_result_date,
-            'current_hiv_result': self.current.today_hiv_result,
-            'current_arv_evidence': self.current.arv_evidence,
-            'declined': self.declined,
-            'defaulter_at_baseline': self.defaulter_at_baseline,
             'documented_pos': self.documented_pos,
             'documented_pos_date': self.documented_pos_date,
             'final_arv_status': self.final_arv_status,
@@ -183,6 +164,10 @@ class StatusHelper:
             'subject_identifier': self.subject_identifier,
             'source_object_name': self.source_object_name,
             'today_hiv_result': self.current.today_hiv_result,
+            'current_hiv_result': self.current.today_hiv_result,
+            'current_arv_evidence': self.current.arv_evidence,
+            'declined': self.declined,
+            'defaulter_at_baseline': self.defaulter_at_baseline,
             'visit_code': self.subject_visit.visit_code,
             'visit_date': Arrow.fromdatetime(self.subject_visit.report_datetime).date(),
         }
@@ -216,9 +201,11 @@ class StatusHelper:
 
     @property
     def final_arv_status_baseline(self):
-        baseline_helper = self.__class__(
-            visit=self.baseline.subject_visit, update_history=False)
-        return baseline_helper.final_arv_status
+        if not self._final_arv_status_baseline:
+            baseline_helper = self.__class__(
+                visit=self.baseline.subject_visit, update_history=False)
+            self._final_arv_status_baseline = baseline_helper.final_arv_status
+        return self._final_arv_status_baseline
 
     @property
     def naive_at_baseline(self):
@@ -226,9 +213,11 @@ class StatusHelper:
 
     @property
     def defaulter_at_baseline(self):
-        baseline_helper = self.__class__(
-            visit=self.baseline.subject_visit, update_history=False)
-        return baseline_helper.final_arv_status == DEFAULTER
+        if not self._defaulter_at_baseline:
+            baseline_helper = self.__class__(
+                visit=self.baseline.subject_visit, update_history=False)
+            self._defaulter_at_baseline = baseline_helper.final_arv_status == DEFAULTER
+        return self._defaulter_at_baseline
 
     @property
     def final_hiv_status_date(self):
@@ -254,17 +243,18 @@ class StatusHelper:
     def best_prev_result_date(self):
         """Returns best date after changing result based on ARV status.
         """
-        if self.current.recorded_hiv_result == POS:
-            best_prev_result_date = self.current.recorded_hiv_result_date
-        elif self.current.result_recorded == POS:
-            best_prev_result_date = self.current.result_recorded_date
-        else:
-            best_prev_result_date = None
-        try:
-            best_prev_result_date = best_prev_result_date.date()
-        except AttributeError:
-            pass
-        return best_prev_result_date
+        if not self._best_prev_result_date:
+            if self.current.recorded_hiv_result == POS:
+                best_prev_result_date = self.current.recorded_hiv_result_date
+            elif self.current.result_recorded == POS:
+                best_prev_result_date = self.current.result_recorded_date
+            else:
+                best_prev_result_date = None
+            try:
+                self._best_prev_result_date = best_prev_result_date.date()
+            except AttributeError:
+                pass
+        return self._best_prev_result_date
 
     def _prepare_previous_status_date_and_awareness(self):
         """Prepares prev_result, prev_result_date, and prev_result_known.

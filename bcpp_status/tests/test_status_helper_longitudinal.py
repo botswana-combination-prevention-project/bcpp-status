@@ -7,7 +7,8 @@ from edc_reference import LongitudinalRefset
 from edc_reference.tests import ReferenceTestHelper
 from faker import Faker
 
-from ..status_helper import StatusHelper, DEFAULTER
+from ..status_helper import StatusHelper
+from ..constants import DEFAULTER
 from ..status_db_helper import StatusDbHelper
 from .status_helper_test_mixin import StatusHelperTestMixin
 
