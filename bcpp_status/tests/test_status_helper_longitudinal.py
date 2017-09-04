@@ -19,7 +19,6 @@ T1 = 'T1'
 fake = Faker()
 
 
-@tag('1')
 class TestStatusHelper(StatusHelperTestMixin, TestCase):
 
     reference_helper_cls = ReferenceTestHelper
