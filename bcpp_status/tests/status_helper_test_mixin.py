@@ -37,7 +37,7 @@ class StatusHelperTestMixin:
             other_record=YES,
             has_tested=YES,
             verbal_hiv_result=POS)
-        status_helper = StatusHelper(visit=visit)
+        status_helper = StatusHelper(visit=visit, update_history=True)
         assert not status_helper.known_positive
 
         # hivtestreview
@@ -47,7 +47,7 @@ class StatusHelperTestMixin:
             visit_code='T0',
             recorded_hiv_result=POS,
             hiv_test_date=(visit.report_datetime - relativedelta(days=50)).date())
-        status_helper = StatusHelper(visit=visit)
+        status_helper = StatusHelper(visit=visit, update_history=True)
         assert status_helper.known_positive
 
     def prepare_hiv_status(self, visit=None, result=None):
@@ -59,7 +59,7 @@ class StatusHelperTestMixin:
                 visit_code=visit.visit_code,
                 hiv_result=POS,
                 hiv_result_datetime=visit.report_datetime)
-            status_helper = StatusHelper(visit=visit)
+            status_helper = StatusHelper(visit=visit, update_history=True)
             assert status_helper.final_hiv_status == POS
         elif result == NEG:
             # hivresult
@@ -76,7 +76,7 @@ class StatusHelperTestMixin:
                 visit_code=visit.visit_code,
                 recorded_hiv_result=NEG,
                 hiv_test_date=(visit.report_datetime - relativedelta(days=50)).date())
-            status_helper = StatusHelper(visit=visit)
+            status_helper = StatusHelper(visit=visit, update_history=True)
             assert status_helper.final_hiv_status == NEG
         elif result == IND:
             # hivresult
@@ -87,7 +87,7 @@ class StatusHelperTestMixin:
                 hiv_result=IND,
                 hiv_result_datetime=visit.report_datetime)
         else:
-            status_helper = StatusHelper(visit=visit)
+            status_helper = StatusHelper(visit=visit, update_history=True)
             assert status_helper.final_hiv_status == UNK
 
     def prepare_art_status(self, visit=None, result=None,
@@ -148,7 +148,7 @@ class StatusHelperTestMixin:
             ever_taken_arv=ever_taken_arv,
             on_arv=on_arv,
             arv_evidence=arv_evidence)
-        status_helper = StatusHelper(visit=visit)
+        status_helper = StatusHelper(visit=visit, update_history=True)
         assert status_helper.final_hiv_status == POS
         if defaulter:
             assert status_helper.final_arv_status == DEFAULTER
