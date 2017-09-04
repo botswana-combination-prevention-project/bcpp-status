@@ -1,10 +1,8 @@
 from django.test import tag
-
 from edc_constants.constants import NO, YES, NOT_APPLICABLE, DWTA
 
 from ..model_values import HivCareAdherence
 from .values_test_case import ValuesTestCase
-from edc_base.utils import get_utcnow
 
 
 class TestHivCareAdherence(ValuesTestCase):

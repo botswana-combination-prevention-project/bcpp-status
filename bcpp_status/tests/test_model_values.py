@@ -1,7 +1,6 @@
 from django.test import TestCase, tag
-
-from edc_reference.tests import ReferenceTestHelper
 from edc_base.utils import get_utcnow
+from edc_reference.tests import ReferenceTestHelper
 
 from ..model_values import ModelValues
 

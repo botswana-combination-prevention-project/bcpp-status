@@ -31,8 +31,8 @@ class StatusDbHelper:
             self.subject_identifier = subject_identifier
             history_obj = StatusHistory.objects.filter(
                 subject_identifier=self.subject_identifier).order_by('created').last()
-        data = json.loads(history_obj.data)
-        for k, v in data.items():
+        self._data = json.loads(history_obj.data)
+        for k, v in self._data.items():
             try:
                 v = datetime.strptime(v, '%Y-%m-%d').date()
             except (TypeError, ValueError):

@@ -1,5 +1,4 @@
 from django.test import tag
-
 from edc_constants.constants import POS, NEG, YES, NO
 
 from ..model_values import HivTestingHistory

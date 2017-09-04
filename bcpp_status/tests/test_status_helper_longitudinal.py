@@ -1,16 +1,14 @@
 from arrow.arrow import Arrow
-from faker import Faker
-from datetime import date, timedelta, datetime
+from datetime import datetime
 from dateutil.relativedelta import relativedelta
-
 from django.test import TestCase, tag
-
-from edc_base.utils import get_utcnow
-from edc_constants.constants import NEG, POS, UNK, YES, IND, NAIVE, NO
+from edc_constants.constants import POS, UNK
+from edc_reference import LongitudinalRefset
 from edc_reference.tests import ReferenceTestHelper
-from edc_reference import LongitudinalRefset, site_reference_configs
+from faker import Faker
 
-from ..status_helper import StatusHelper, DEFAULTER, ART_PRESCRIPTION, ON_ART
+from ..status_helper import StatusHelper, DEFAULTER
+from ..status_db_helper import StatusDbHelper
 from .status_helper_test_mixin import StatusHelperTestMixin
 
 MICROTUBE = 'Microtube'
@@ -49,33 +47,61 @@ class TestStatusHelper(StatusHelperTestMixin, TestCase):
     def test_final_hiv_status(self):
         self.prepare_art_status(
             visit=self.subject_visits[0], defaulter=True)
-        status_helper = StatusHelper(visit=self.subject_visits[0])
+        status_helper = StatusHelper(
+            visit=self.subject_visits[0], update_history=True)
+        self.assertEqual(status_helper.final_hiv_status, POS)
+        self.assertEqual(status_helper.final_arv_status, DEFAULTER)
+
+        status_helper = StatusDbHelper(visit=self.subject_visits[0])
         self.assertEqual(status_helper.final_hiv_status, POS)
         self.assertEqual(status_helper.final_arv_status, DEFAULTER)
 
     def test_final_hiv_status_1(self):
         self.prepare_art_status(
             visit=self.subject_visits[1], defaulter=True)
-        status_helper = StatusHelper(visit=self.subject_visits[1])
+
+        status_helper = StatusHelper(
+            visit=self.subject_visits[1], update_history=True)
         self.assertEqual(status_helper.final_hiv_status, POS)
         self.assertEqual(status_helper.final_arv_status, DEFAULTER)
-        status_helper = StatusHelper(visit=self.subject_visits[2])
+        status_helper = StatusDbHelper(visit=self.subject_visits[1])
+        self.assertEqual(status_helper.final_hiv_status, POS)
+        self.assertEqual(status_helper.final_arv_status, DEFAULTER)
+
+        status_helper = StatusHelper(
+            visit=self.subject_visits[2], update_history=True)
+        self.assertEqual(status_helper.final_hiv_status, POS)
+        self.assertEqual(status_helper.final_arv_status, DEFAULTER)
+        status_helper = StatusDbHelper(visit=self.subject_visits[2])
         self.assertEqual(status_helper.final_hiv_status, POS)
         self.assertEqual(status_helper.final_arv_status, DEFAULTER)
 
     def test_final_hiv_status_2(self):
         self.prepare_art_status(
             visit=self.subject_visits[2], defaulter=True)
-        status_helper = StatusHelper(visit=self.subject_visits[2])
+        status_helper = StatusHelper(
+            visit=self.subject_visits[2], update_history=True)
+        self.assertEqual(status_helper.final_hiv_status, POS)
+        self.assertEqual(status_helper.final_arv_status, DEFAULTER)
+        status_helper = StatusDbHelper(visit=self.subject_visits[2])
         self.assertEqual(status_helper.final_hiv_status, POS)
         self.assertEqual(status_helper.final_arv_status, DEFAULTER)
 
     def test_final_hiv_status_a(self):
         self.prepare_art_status(
             visit=self.subject_visits[2], defaulter=True)
-        status_helper = StatusHelper(visit=self.subject_visits[0])
+        status_helper = StatusHelper(
+            visit=self.subject_visits[0], update_history=True)
         self.assertEqual(status_helper.final_hiv_status, UNK)
         self.assertEqual(status_helper.final_arv_status, None)
-        status_helper = StatusHelper(visit=self.subject_visits[1])
+        status_helper = StatusDbHelper(visit=self.subject_visits[0])
+        self.assertEqual(status_helper.final_hiv_status, UNK)
+        self.assertEqual(status_helper.final_arv_status, None)
+
+        status_helper = StatusHelper(
+            visit=self.subject_visits[1], update_history=True)
+        self.assertEqual(status_helper.final_hiv_status, UNK)
+        self.assertEqual(status_helper.final_arv_status, None)
+        status_helper = StatusDbHelper(visit=self.subject_visits[1])
         self.assertEqual(status_helper.final_hiv_status, UNK)
         self.assertEqual(status_helper.final_arv_status, None)
