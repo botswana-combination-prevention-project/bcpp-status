@@ -44,9 +44,15 @@ class TestStatusHelper(StatusHelperTestMixin, TestCase):
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
+    def validate(self):
+        StatusDbHelper(visit=self.subject_visits[0], validate=True)
+        StatusDbHelper(visit=self.subject_visits[1], validate=True)
+        StatusDbHelper(visit=self.subject_visits[2], validate=True)
+
     def test_final_hiv_status(self):
         self.prepare_art_status(
             visit=self.subject_visits[0], defaulter=True)
+
         status_helper = StatusHelper(
             visit=self.subject_visits[0], update_history=True)
         self.assertEqual(status_helper.final_hiv_status, POS)
@@ -55,6 +61,8 @@ class TestStatusHelper(StatusHelperTestMixin, TestCase):
         status_helper = StatusDbHelper(visit=self.subject_visits[0])
         self.assertEqual(status_helper.final_hiv_status, POS)
         self.assertEqual(status_helper.final_arv_status, DEFAULTER)
+
+        self.validate()
 
     def test_final_hiv_status_1(self):
         self.prepare_art_status(
@@ -76,6 +84,8 @@ class TestStatusHelper(StatusHelperTestMixin, TestCase):
         self.assertEqual(status_helper.final_hiv_status, POS)
         self.assertEqual(status_helper.final_arv_status, DEFAULTER)
 
+        self.validate()
+
     def test_final_hiv_status_2(self):
         self.prepare_art_status(
             visit=self.subject_visits[2], defaulter=True)
@@ -86,6 +96,8 @@ class TestStatusHelper(StatusHelperTestMixin, TestCase):
         status_helper = StatusDbHelper(visit=self.subject_visits[2])
         self.assertEqual(status_helper.final_hiv_status, POS)
         self.assertEqual(status_helper.final_arv_status, DEFAULTER)
+
+        self.validate()
 
     def test_final_hiv_status_a(self):
         self.prepare_art_status(
@@ -105,3 +117,5 @@ class TestStatusHelper(StatusHelperTestMixin, TestCase):
         status_helper = StatusDbHelper(visit=self.subject_visits[1])
         self.assertEqual(status_helper.final_hiv_status, UNK)
         self.assertEqual(status_helper.final_arv_status, None)
+
+        self.validate()

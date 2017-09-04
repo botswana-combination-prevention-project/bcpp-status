@@ -128,8 +128,14 @@ class StatusHelper:
             self.prev_result == POS and self.prev_result_known == YES)
         self.has_tested = YES if YES in [
             self.baseline.has_tested, self.current.has_tested] else NO
+
+        # attrs matching StatusDBHelper
         self.current_hiv_result = self.current.today_hiv_result
+        self.today_hiv_result = self.current.today_hiv_result
         self.current_arv_evidence = self.current.arv_evidence
+        self.visit_code = self.subject_visit.visit_code
+        self.visit_date = self.subject_visit.report_datetime.date()
+
         if update_history:
             self.update_status_history()
 
@@ -151,11 +157,12 @@ class StatusHelper:
             self.history_obj = model_cls.objects.create(
                 data=self.to_json(), **opts)
 
-    def to_json(self):
-        data = {
+    @property
+    def _data(self):
+        return {
             'best_prev_result_date': self.best_prev_result_date,
-            'current_hiv_result': self.current_hiv_result,
-            'current_arv_evidence': self.current_arv_evidence,
+            'current_hiv_result': self.current.today_hiv_result,
+            'current_arv_evidence': self.current.arv_evidence,
             'declined': self.declined,
             'defaulter_at_baseline': self.defaulter_at_baseline,
             'documented_pos': self.documented_pos,
@@ -179,7 +186,9 @@ class StatusHelper:
             'visit_code': self.subject_visit.visit_code,
             'visit_date': Arrow.fromdatetime(self.subject_visit.report_datetime).date(),
         }
-        return json.dumps(data, cls=DjangoJSONEncoder)
+
+    def to_json(self):
+        return json.dumps(self._data, cls=DjangoJSONEncoder)
 
     @property
     def subject_visits(self):
@@ -229,6 +238,10 @@ class StatusHelper:
         final_hiv_status_date = self._final_hiv_status_date_if_pos
         if not final_hiv_status_date:
             final_hiv_status_date = self._final_hiv_status_date_if_neg
+        try:
+            final_hiv_status_date = final_hiv_status_date.date()
+        except AttributeError:
+            pass
         return final_hiv_status_date
 
     @property
@@ -247,6 +260,10 @@ class StatusHelper:
             best_prev_result_date = self.current.result_recorded_date
         else:
             best_prev_result_date = None
+        try:
+            best_prev_result_date = best_prev_result_date.date()
+        except AttributeError:
+            pass
         return best_prev_result_date
 
     def _prepare_previous_status_date_and_awareness(self):
@@ -285,6 +302,10 @@ class StatusHelper:
             self.prev_result = None
             self.prev_result_date = None
             self.prev_result_known = None
+        try:
+            self.prev_result_date = self.prev_result_date.date()
+        except AttributeError:
+            pass
 
     def _previous_status_date_and_awareness_exceptions(self):
         """Overwrites invalid result sequence and/or derives from
@@ -344,6 +365,10 @@ class StatusHelper:
         else:
             self.documented_pos = NO
             self.documented_pos_date = None
+        try:
+            self.documented_pos_date = self.documented_pos_date.date()
+        except AttributeError:
+            pass
 
     def _prepare_final_hiv_status(self):
         if self.current.elisa_hiv_result in (POS, NEG):

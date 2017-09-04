@@ -3,6 +3,7 @@ import json
 from django.db import models
 from edc_base.model_mixins import BaseUuidModel
 from edc_identifier.model_mixins import NonUniqueSubjectIdentifierFieldMixin
+from django.db.models.indexes import Index
 
 
 class StatusHistory(NonUniqueSubjectIdentifierFieldMixin, BaseUuidModel):
@@ -21,3 +22,9 @@ class StatusHistory(NonUniqueSubjectIdentifierFieldMixin, BaseUuidModel):
 
     def to_dict(self):
         return json.loads(self.data)
+
+    class Meta:
+        ordering = ('subject_identifier', 'status_date')
+        indexes = [
+            Index(fields=['subject_identifier', 'status_date']),
+            Index(fields=['subject_identifier', 'status_date', '-created'])]

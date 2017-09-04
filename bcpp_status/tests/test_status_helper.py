@@ -47,6 +47,10 @@ class TestStatusHelper(TestCase):
             'today_hiv_result_date': None,
         }
 
+    def validate(self, subject_visits=None):
+        for subject_visit in subject_visits:
+            StatusDbHelper(visit=subject_visit, validate=True)
+
     def test(self):
         self.assertIn('hiv_result', site_reference_configs.get_fields(
             'bcpp_subject.hivresult'))
@@ -86,6 +90,9 @@ class TestStatusHelper(TestCase):
         status_helper = StatusDbHelper(visit=subject_visits[1])
         self.assertEqual(status_helper.subject_visit, subject_visits[1])
 
+        self.validate(subject_visits=subject_visits)
+
+    @tag('1')
     def test_init_with_data(self):
         report_datetime = get_utcnow()
 
@@ -138,6 +145,8 @@ class TestStatusHelper(TestCase):
             visit=subject_visits[0], update_history=True))
 
         self.assertTrue(StatusDbHelper(visit=subject_visits[0]))
+
+        self.validate(subject_visits=subject_visits)
 
     def test_init_with_data_and_db_helper_creates(self):
         report_datetime = get_utcnow()
