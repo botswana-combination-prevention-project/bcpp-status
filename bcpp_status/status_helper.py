@@ -129,6 +129,7 @@ class StatusHelper:
         self.has_tested = YES if YES in [
             self.baseline.has_tested, self.current.has_tested] else NO
         self.current_hiv_result = self.current.today_hiv_result
+        self.current_arv_evidence = self.current.arv_evidence
         if update_history:
             self.history_obj = self.update_status_history()
 
@@ -154,6 +155,7 @@ class StatusHelper:
         data = {
             'best_prev_result_date': self.best_prev_result_date,
             'current_hiv_result': self.current_hiv_result,
+            'current_arv_evidence': self.current_arv_evidence,
             'declined': self.declined,
             'defaulter_at_baseline': self.defaulter_at_baseline,
             'documented_pos': self.documented_pos,

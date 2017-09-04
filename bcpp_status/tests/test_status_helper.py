@@ -11,6 +11,7 @@ from edc_reference.tests import ReferenceTestHelper
 from edc_reference import LongitudinalRefset, site_reference_configs
 
 from ..status_helper import StatusHelper, DEFAULTER, ART_PRESCRIPTION, ON_ART
+from bcpp_status.status_db_helper import StatusDbHelper
 
 MICROTUBE = 'Microtube'
 T1 = 'T1'
@@ -71,9 +72,20 @@ class TestStatusHelper(TestCase):
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
-        status_helper = StatusHelper(visit=subject_visits[0])
+        status_helper = StatusHelper(
+            visit=subject_visits[0], update_history=True)
         self.assertEqual(status_helper.subject_visit, subject_visits[0])
-        status_helper = StatusHelper(visit=subject_visits[1])
+
+        # from StatusDbHelper
+        status_helper = StatusDbHelper(visit=subject_visits[0])
+        self.assertEqual(status_helper.subject_visit, subject_visits[0])
+
+        status_helper = StatusHelper(
+            visit=subject_visits[1], update_history=True)
+        self.assertEqual(status_helper.subject_visit, subject_visits[1])
+
+        # from StatusDbHelper
+        status_helper = StatusDbHelper(visit=subject_visits[1])
         self.assertEqual(status_helper.subject_visit, subject_visits[1])
 
     def test_init_with_data(self):
@@ -124,7 +136,10 @@ class TestStatusHelper(TestCase):
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
-        self.assertTrue(StatusHelper(visit=subject_visits[0]))
+        self.assertTrue(StatusHelper(
+            visit=subject_visits[0], update_history=True))
+
+        self.assertTrue(StatusDbHelper(visit=subject_visits[0]))
 
     def test_assert_baseline_pos(self):
         report_datetime = get_utcnow()
@@ -158,8 +173,14 @@ class TestStatusHelper(TestCase):
 
         status_helper = StatusHelper(
             subject_identifier=self.subject_identifier,
-            model_values=self.model_values)
+            model_values=self.model_values, update_history=True)
+        self.assertEqual(status_helper.final_hiv_status, POS)
+        self.assertEqual(status_helper.final_arv_status, NAIVE)
+        self.assertEqual(status_helper.prev_result_known, YES)
+        self.assertEqual(status_helper.prev_result, NEG)
 
+        status_helper = StatusDbHelper(
+            subject_identifier=self.subject_identifier)
         self.assertEqual(status_helper.final_hiv_status, POS)
         self.assertEqual(status_helper.final_arv_status, NAIVE)
         self.assertEqual(status_helper.prev_result_known, YES)
@@ -246,7 +267,13 @@ class TestStatusHelper(TestCase):
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
-        obj = StatusHelper(visit=subject_visits[1])
+        obj = StatusHelper(visit=subject_visits[1], update_history=True)
+        self.assertEqual(obj.final_hiv_status, POS)
+        self.assertEqual(obj.final_arv_status, NAIVE)
+        self.assertEqual(obj.prev_result_known, YES)
+        self.assertEqual(obj.prev_result, NEG)
+
+        obj = StatusDbHelper(visit=subject_visits[1])
         self.assertEqual(obj.final_hiv_status, POS)
         self.assertEqual(obj.final_arv_status, NAIVE)
         self.assertEqual(obj.prev_result_known, YES)
@@ -272,7 +299,14 @@ class TestStatusHelper(TestCase):
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
-        obj = StatusHelper(visit=subject_visits[0])
+        obj = StatusHelper(visit=subject_visits[0], update_history=True)
+        self.assertEqual(obj.final_hiv_status, POS)
+        self.assertEqual(obj.final_hiv_status_date, date(2016, 1, 7))
+        self.assertIsNone(obj.prev_result)
+        self.assertIsNone(obj.prev_result_date)
+        self.assertIsNone(obj.prev_result_known)
+
+        obj = StatusDbHelper(visit=subject_visits[0])
         self.assertEqual(obj.final_hiv_status, POS)
         self.assertEqual(obj.final_hiv_status_date, date(2016, 1, 7))
         self.assertIsNone(obj.prev_result)
@@ -315,7 +349,12 @@ class TestStatusHelper(TestCase):
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
-        obj = StatusHelper(visit=subject_visits[0])
+        obj = StatusHelper(visit=subject_visits[0], update_history=True)
+        self.assertEqual(obj.final_hiv_status, POS)
+        self.assertIsNone(obj.prev_result)
+        self.assertIsNone(obj.prev_result_known)
+
+        obj = StatusDbHelper(visit=subject_visits[0])
         self.assertEqual(obj.final_hiv_status, POS)
         self.assertIsNone(obj.prev_result)
         self.assertIsNone(obj.prev_result_known)
@@ -369,7 +408,12 @@ class TestStatusHelper(TestCase):
             ever_taken_arv=NO,
             on_arv=NO)
 
-        obj = StatusHelper(visit=subject_visits[0])
+        obj = StatusHelper(visit=subject_visits[0], update_history=True)
+        self.assertEqual(obj.final_arv_status, DEFAULTER)
+        self.assertEqual(obj.final_hiv_status_date, date(2013, 5, 7))
+        self.assertEqual(obj.prev_result_date, date(2013, 5, 7))
+
+        obj = StatusDbHelper(visit=subject_visits[0])
         self.assertEqual(obj.final_arv_status, DEFAULTER)
         self.assertEqual(obj.final_hiv_status_date, date(2013, 5, 7))
         self.assertEqual(obj.prev_result_date, date(2013, 5, 7))
@@ -460,8 +504,14 @@ class TestStatusHelper(TestCase):
             hiv_result=POS,
             hiv_result_datetime=subject_visits[1].report_datetime)
 
-        obj = StatusHelper(visit=subject_visits[1])
+        obj = StatusHelper(visit=subject_visits[1], update_history=True)
+        self.assertEqual(obj.final_hiv_status, POS)
+        self.assertEqual(obj.final_hiv_status_date, date(2017, 1, 6))
+        self.assertEqual(obj.prev_result, NEG)
+        self.assertEqual(obj.prev_result_date, date(2016, 1, 7))
+        self.assertEqual(obj.final_arv_status, DEFAULTER)
 
+        obj = StatusDbHelper(visit=subject_visits[1])
         self.assertEqual(obj.final_hiv_status, POS)
         self.assertEqual(obj.final_hiv_status_date, date(2017, 1, 6))
         self.assertEqual(obj.prev_result, NEG)
@@ -500,8 +550,13 @@ class TestStatusHelper(TestCase):
             recorded_hiv_result=POS,
             hiv_test_date=Arrow.fromdate(date(2015, 1, 7)).date())
 
-        obj = StatusHelper(visit=subject_visits[0])
+        obj = StatusHelper(visit=subject_visits[0], update_history=True)
+        self.assertEqual(obj.prev_result, POS)
+        self.assertEqual(obj.prev_result_date,
+                         Arrow.fromdate(date(2015, 1, 7)).date())
+        self.assertEqual(obj.prev_result_known, YES)
 
+        obj = StatusDbHelper(visit=subject_visits[0])
         self.assertEqual(obj.prev_result, POS)
         self.assertEqual(obj.prev_result_date,
                          Arrow.fromdate(date(2015, 1, 7)).date())
@@ -546,7 +601,11 @@ class TestStatusHelper(TestCase):
             hiv_result=POS,
             hiv_result_datetime=report_datetime)
 
-        obj = StatusHelper(visit=subject_visits[0])
+        obj = StatusHelper(visit=subject_visits[0], update_history=True)
+        self.assertEqual(obj.prev_result, POS)
+        self.assertEqual(obj.prev_result_known, YES)
+
+        obj = StatusDbHelper(visit=subject_visits[0])
         self.assertEqual(obj.prev_result, POS)
         self.assertEqual(obj.prev_result_known, YES)
 
@@ -580,7 +639,10 @@ class TestStatusHelper(TestCase):
             hiv_result=POS,
             hiv_result_datetime=Arrow.fromdate(date(2016, 1, 7)).datetime)
 
-        obj = StatusHelper(visit=subject_visits[0])
+        obj = StatusHelper(visit=subject_visits[0], update_history=True)
+        self.assertEqual(obj.final_hiv_status_date, date(2015, 1, 7))
+
+        obj = StatusDbHelper(visit=subject_visits[0])
         self.assertEqual(obj.final_hiv_status_date, date(2015, 1, 7))
 
     def test_first_pos_date1(self):
@@ -625,7 +687,11 @@ class TestStatusHelper(TestCase):
             hiv_result=POS,
             hiv_result_datetime=Arrow.fromdate(date(2016, 1, 7)).datetime)
 
-        obj = StatusHelper(visit=subject_visits[0])
+        obj = StatusHelper(visit=subject_visits[0], update_history=True)
+        self.assertEqual(obj.prev_result, POS)
+        self.assertEqual(obj.prev_result_known, YES)
+
+        obj = StatusDbHelper(visit=subject_visits[0])
         self.assertEqual(obj.prev_result, POS)
         self.assertEqual(obj.prev_result_known, YES)
 
@@ -660,7 +726,13 @@ class TestStatusHelper(TestCase):
             recorded_hiv_result=NEG,
             hiv_test_date=Arrow.fromdate(date(2015, 1, 7)).date())
 
-        obj = StatusHelper(visit=subject_visits[0])
+        obj = StatusHelper(visit=subject_visits[0], update_history=True)
+        self.assertEqual(obj.prev_result_known, YES)
+        self.assertEqual(obj.prev_result, NEG)
+        self.assertEqual(obj.prev_result_date, date(2015, 1, 7))
+        self.assertEqual(obj.final_hiv_status_date, date(2016, 1, 7))
+
+        obj = StatusDbHelper(visit=subject_visits[0])
         self.assertEqual(obj.prev_result_known, YES)
         self.assertEqual(obj.prev_result, NEG)
         self.assertEqual(obj.prev_result_date, date(2015, 1, 7))
@@ -706,7 +778,11 @@ class TestStatusHelper(TestCase):
             hiv_result=NEG,
             hiv_result_datetime=report_datetime)
 
-        obj = StatusHelper(visit=subject_visits[0])
+        obj = StatusHelper(visit=subject_visits[0], update_history=True)
+        self.assertEqual(obj.prev_result_known, YES)
+        self.assertEqual(obj.prev_result, NEG)
+
+        obj = StatusDbHelper(visit=subject_visits[0])
         self.assertEqual(obj.prev_result_known, YES)
         self.assertEqual(obj.prev_result, NEG)
 
@@ -751,7 +827,13 @@ class TestStatusHelper(TestCase):
             result_date=Arrow.fromdate(date(2014, 1, 7)).date(),
             result_doc_type='PIMS')
 
-        obj = StatusHelper(visit=subject_visits[0])
+        obj = StatusHelper(visit=subject_visits[0], update_history=True)
+        self.assertEqual(obj.prev_result_known, YES)
+        self.assertEqual(obj.prev_result, POS)
+        self.assertEqual(obj.prev_result_date, date(2014, 1, 7))
+        self.assertEqual(obj.final_hiv_status_date, date(2014, 1, 7))
+
+        obj = StatusDbHelper(visit=subject_visits[0])
         self.assertEqual(obj.prev_result_known, YES)
         self.assertEqual(obj.prev_result, POS)
         self.assertEqual(obj.prev_result_date, date(2014, 1, 7))
@@ -798,7 +880,13 @@ class TestStatusHelper(TestCase):
             result_date=Arrow.fromdate(date(2014, 1, 7)).date(),
             result_doc_type='PIMS')
 
-        obj = StatusHelper(visit=subject_visits[0])
+        obj = StatusHelper(visit=subject_visits[0], update_history=True)
+        self.assertEqual(obj.prev_result_known, YES)
+        self.assertEqual(obj.prev_result, POS)
+        self.assertEqual(obj.prev_result_date, date(2014, 1, 7))
+        self.assertEqual(obj.final_hiv_status_date, date(2014, 1, 7))
+
+        obj = StatusDbHelper(visit=subject_visits[0])
         self.assertEqual(obj.prev_result_known, YES)
         self.assertEqual(obj.prev_result, POS)
         self.assertEqual(obj.prev_result_date, date(2014, 1, 7))
@@ -845,7 +933,14 @@ class TestStatusHelper(TestCase):
             result_date=Arrow.fromdate(date(2014, 1, 7)).date(),
             result_doc_type='PIMS')
 
-        obj = StatusHelper(visit=subject_visits[0])
+        obj = StatusHelper(visit=subject_visits[0], update_history=True)
+        self.assertEqual(obj.prev_result_known, YES)
+        self.assertEqual(obj.prev_result, NEG)
+        self.assertEqual(obj.prev_result_date, date(2015, 1, 7))
+        self.assertEqual(obj.final_hiv_status, POS)
+        self.assertEqual(obj.final_hiv_status_date, date(2016, 1, 7))
+
+        obj = StatusDbHelper(visit=subject_visits[0])
         self.assertEqual(obj.prev_result_known, YES)
         self.assertEqual(obj.prev_result, NEG)
         self.assertEqual(obj.prev_result_date, date(2015, 1, 7))
@@ -884,7 +979,13 @@ class TestStatusHelper(TestCase):
             recorded_hiv_result=POS,
             hiv_test_date=Arrow.fromdate(date(2015, 1, 7)).date())
 
-        obj = StatusHelper(visit=subject_visits[0])
+        obj = StatusHelper(visit=subject_visits[0], update_history=True)
+        self.assertEqual(obj.prev_result_known, YES)
+        self.assertEqual(obj.prev_result, NEG)
+        self.assertEqual(obj.prev_result_date, date(2015, 1, 7))
+        self.assertEqual(obj.final_hiv_status_date, date(2016, 1, 7))
+
+        obj = StatusDbHelper(visit=subject_visits[0])
         self.assertEqual(obj.prev_result_known, YES)
         self.assertEqual(obj.prev_result, NEG)
         self.assertEqual(obj.prev_result_date, date(2015, 1, 7))
@@ -923,7 +1024,13 @@ class TestStatusHelper(TestCase):
             result_date=Arrow.fromdate(date(2015, 1, 7)).date(),
             result_doc_type='PIMS')
 
-        obj = StatusHelper(visit=subject_visits[0])
+        obj = StatusHelper(visit=subject_visits[0], update_history=True)
+        self.assertEqual(obj.prev_result_known, YES)
+        self.assertEqual(obj.prev_result, NEG)
+        self.assertEqual(obj.prev_result_date, date(2015, 1, 7))
+        self.assertEqual(obj.final_hiv_status_date, date(2016, 1, 7))
+
+        obj = StatusDbHelper(visit=subject_visits[0])
         self.assertEqual(obj.prev_result_known, YES)
         self.assertEqual(obj.prev_result, NEG)
         self.assertEqual(obj.prev_result_date, date(2015, 1, 7))
@@ -962,7 +1069,13 @@ class TestStatusHelper(TestCase):
             result_date=Arrow.fromdate(date(2015, 1, 7)).date(),
             result_doc_type='PIMS')
 
-        obj = StatusHelper(visit=subject_visits[0])
+        obj = StatusHelper(visit=subject_visits[0], update_history=True)
+        self.assertEqual(obj.prev_result_known, YES)
+        self.assertEqual(obj.prev_result, NEG)
+        self.assertEqual(obj.prev_result_date, date(2015, 1, 7))
+        self.assertEqual(obj.final_hiv_status_date, date(2016, 1, 7))
+
+        obj = StatusDbHelper(visit=subject_visits[0])
         self.assertEqual(obj.prev_result_known, YES)
         self.assertEqual(obj.prev_result, NEG)
         self.assertEqual(obj.prev_result_date, date(2015, 1, 7))
@@ -1009,7 +1122,14 @@ class TestStatusHelper(TestCase):
             recorded_hiv_result=NEG,
             hiv_test_date=Arrow.fromdate(date(2015, 1, 7)).date())
 
-        obj = StatusHelper(visit=subject_visits[0])
+        obj = StatusHelper(visit=subject_visits[0], update_history=True)
+        self.assertEqual(obj.final_hiv_status, NEG)
+        self.assertEqual(obj.final_hiv_status_date, date(2016, 1, 7))
+        self.assertEqual(obj.prev_result, NEG)
+        self.assertEqual(obj.prev_result_known, YES)
+        self.assertEqual(obj.prev_result_date, date(2015, 1, 7))
+
+        obj = StatusDbHelper(visit=subject_visits[0])
         self.assertEqual(obj.final_hiv_status, NEG)
         self.assertEqual(obj.final_hiv_status_date, date(2016, 1, 7))
         self.assertEqual(obj.prev_result, NEG)
@@ -1049,7 +1169,13 @@ class TestStatusHelper(TestCase):
             result_date=Arrow.fromdate(date(2015, 1, 7)).date(),
             result_doc_type='PIMS')
 
-        obj = StatusHelper(visit=subject_visits[0])
+        obj = StatusHelper(visit=subject_visits[0], update_history=True)
+        self.assertEqual(obj.prev_result_known, YES)
+        self.assertEqual(obj.prev_result, POS)
+        self.assertEqual(obj.prev_result_date, date(2015, 1, 7))
+        self.assertEqual(obj.final_hiv_status_date, date(2015, 1, 7))
+
+        obj = StatusDbHelper(visit=subject_visits[0])
         self.assertEqual(obj.prev_result_known, YES)
         self.assertEqual(obj.prev_result, POS)
         self.assertEqual(obj.prev_result_date, date(2015, 1, 7))
@@ -1088,8 +1214,13 @@ class TestStatusHelper(TestCase):
             result_date=Arrow.fromdate(date(2015, 1, 7)).date(),
             result_doc_type='PIMS')
 
-        obj = StatusHelper(visit=subject_visits[0])
+        obj = StatusHelper(visit=subject_visits[0], update_history=True)
+        self.assertEqual(obj.prev_result_known, YES)
+        self.assertEqual(obj.prev_result, NEG)
+        self.assertEqual(obj.prev_result_date, date(2015, 1, 7))
+        self.assertEqual(obj.final_hiv_status_date, date(2016, 1, 7))
 
+        obj = StatusDbHelper(visit=subject_visits[0])
         self.assertEqual(obj.prev_result_known, YES)
         self.assertEqual(obj.prev_result, NEG)
         self.assertEqual(obj.prev_result_date, date(2015, 1, 7))
@@ -1128,8 +1259,13 @@ class TestStatusHelper(TestCase):
             result_date=Arrow.fromdate(date(2015, 1, 7)).date(),
             result_doc_type='PIMS')
 
-        obj = StatusHelper(visit=subject_visits[0])
+        obj = StatusHelper(visit=subject_visits[0], update_history=True)
+        self.assertEqual(obj.prev_result_known, YES)
+        self.assertEqual(obj.prev_result, NEG)
+        self.assertEqual(obj.prev_result_date, date(2015, 1, 7))
+        self.assertEqual(obj.final_hiv_status_date, date(2016, 1, 7))
 
+        obj = StatusDbHelper(visit=subject_visits[0])
         self.assertEqual(obj.prev_result_known, YES)
         self.assertEqual(obj.prev_result, NEG)
         self.assertEqual(obj.prev_result_date, date(2015, 1, 7))
@@ -1158,7 +1294,14 @@ class TestStatusHelper(TestCase):
             hiv_result=NEG,
             hiv_result_datetime=report_datetime)
 
-        obj = StatusHelper(visit=subject_visits[0])
+        obj = StatusHelper(visit=subject_visits[0], update_history=True)
+        self.assertIsNone(obj.prev_result_known)
+        self.assertIsNone(obj.prev_result)
+        self.assertIsNone(obj.prev_result_date)
+        self.assertEqual(obj.final_hiv_status, NEG)
+        self.assertEqual(obj.final_hiv_status_date, date(2016, 1, 7))
+
+        obj = StatusDbHelper(visit=subject_visits[0])
         self.assertIsNone(obj.prev_result_known)
         self.assertIsNone(obj.prev_result)
         self.assertIsNone(obj.prev_result_date)
@@ -1197,8 +1340,13 @@ class TestStatusHelper(TestCase):
             has_tested=YES,
             verbal_hiv_result=NEG)
 
-        obj = StatusHelper(visit=subject_visits[0])
+        obj = StatusHelper(visit=subject_visits[0], update_history=True)
+        self.assertIsNone(obj.prev_result_known)
+        self.assertIsNone(obj.prev_result)
+        self.assertIsNone(obj.prev_result_date)
+        self.assertEqual(obj.final_hiv_status, NEG)
 
+        obj = StatusDbHelper(visit=subject_visits[0])
         self.assertIsNone(obj.prev_result_known)
         self.assertIsNone(obj.prev_result)
         self.assertIsNone(obj.prev_result_date)
@@ -1244,7 +1392,13 @@ class TestStatusHelper(TestCase):
             result_date=Arrow.fromdate(date(2015, 1, 7)).date(),
             result_doc_type='PIMS')
 
-        obj = StatusHelper(visit=subject_visits[0])
+        obj = StatusHelper(visit=subject_visits[0], update_history=True)
+        self.assertEqual(obj.prev_result_known, YES)
+        self.assertEqual(obj.prev_result, POS)
+        self.assertEqual(obj.prev_result_date, date(2015, 1, 7))
+        self.assertEqual(obj.final_hiv_status_date, date(2015, 1, 7))
+
+        obj = StatusDbHelper(visit=subject_visits[0])
         self.assertEqual(obj.prev_result_known, YES)
         self.assertEqual(obj.prev_result, POS)
         self.assertEqual(obj.prev_result_date, date(2015, 1, 7))
@@ -1282,7 +1436,13 @@ class TestStatusHelper(TestCase):
             result_date=Arrow.fromdate(date(2015, 1, 7)).date(),
             result_doc_type='PIMS')
 
-        obj = StatusHelper(visit=subject_visits[0])
+        obj = StatusHelper(visit=subject_visits[0], update_history=True)
+        self.assertEqual(obj.prev_result_known, YES)
+        self.assertEqual(obj.prev_result, NEG)
+        self.assertEqual(obj.prev_result_date, date(2015, 1, 7))
+        self.assertEqual(obj.final_hiv_status_date, date(2016, 1, 7))
+
+        obj = StatusDbHelper(visit=subject_visits[0])
         self.assertEqual(obj.prev_result_known, YES)
         self.assertEqual(obj.prev_result, NEG)
         self.assertEqual(obj.prev_result_date, date(2015, 1, 7))
@@ -1320,8 +1480,11 @@ class TestStatusHelper(TestCase):
             result_date=Arrow.fromdate(date(2015, 1, 7)).date(),
             result_doc_type='PIMS')
 
-        obj = StatusHelper(visit=subject_visits[0])
+        obj = StatusHelper(visit=subject_visits[0], update_history=True)
+        self.assertEqual(obj.prev_result_known, YES)
+        self.assertEqual(obj.prev_result, NEG)
 
+        obj = StatusDbHelper(visit=subject_visits[0])
         self.assertEqual(obj.prev_result_known, YES)
         self.assertEqual(obj.prev_result, NEG)
 
@@ -1367,10 +1530,14 @@ class TestStatusHelper(TestCase):
             on_arv=NO,
             arv_evidence=NO)
 
-        obj = StatusHelper(visit=subject_visits[0])
-
+        obj = StatusHelper(visit=subject_visits[0], update_history=True)
         self.assertEqual(obj.final_hiv_status, POS)
-        self.assertEqual(obj.current.arv_evidence, YES)
+        self.assertEqual(obj.current_arv_evidence, YES)
+        self.assertEqual(obj.final_arv_status, DEFAULTER)
+
+        obj = StatusDbHelper(visit=subject_visits[0])
+        self.assertEqual(obj.final_hiv_status, POS)
+        self.assertEqual(obj.current_arv_evidence, YES)
         self.assertEqual(obj.final_arv_status, DEFAULTER)
 
     def test_arv_status_naive(self):
@@ -1414,9 +1581,14 @@ class TestStatusHelper(TestCase):
             ever_taken_arv=NO,
             on_arv=NO)
 
-        obj = StatusHelper(visit=subject_visits[0])
+        obj = StatusHelper(visit=subject_visits[0], update_history=True)
         self.assertEqual(obj.final_hiv_status, POS)
-        self.assertIsNone(obj.current.arv_evidence)
+        self.assertIsNone(obj.current_arv_evidence)
+        self.assertEqual(obj.final_arv_status, NAIVE)
+
+        obj = StatusDbHelper(visit=subject_visits[0])
+        self.assertEqual(obj.final_hiv_status, POS)
+        self.assertIsNone(obj.current_arv_evidence)
         self.assertEqual(obj.final_arv_status, NAIVE)
 
     def test_arv_status_naive1(self):
@@ -1487,9 +1659,14 @@ class TestStatusHelper(TestCase):
             on_arv=NO,
             arv_evidence=NO)
 
-        obj = StatusHelper(visit=subject_visits[1])
+        obj = StatusHelper(visit=subject_visits[1], update_history=True)
         self.assertEqual(obj.final_hiv_status, POS)
-        self.assertEqual(obj.current.arv_evidence, NO)
+        self.assertEqual(obj.current_arv_evidence, NO)
+        self.assertEqual(obj.final_arv_status, NAIVE)
+
+        obj = StatusDbHelper(visit=subject_visits[1])
+        self.assertEqual(obj.final_hiv_status, POS)
+        self.assertEqual(obj.current_arv_evidence, NO)
         self.assertEqual(obj.final_arv_status, NAIVE)
 
     def test_arv_status_with_evidence(self):
@@ -1534,9 +1711,14 @@ class TestStatusHelper(TestCase):
             on_arv=NO,
             arv_evidence=YES)
 
-        obj = StatusHelper(visit=subject_visits[0])
+        obj = StatusHelper(visit=subject_visits[0], update_history=True)
         self.assertEqual(obj.final_hiv_status, POS)
-        self.assertEqual(obj.current.arv_evidence, YES)
+        self.assertEqual(obj.current_arv_evidence, YES)
+        self.assertEqual(obj.final_arv_status, DEFAULTER)
+
+        obj = StatusDbHelper(visit=subject_visits[0])
+        self.assertEqual(obj.final_hiv_status, POS)
+        self.assertEqual(obj.current_arv_evidence, YES)
         self.assertEqual(obj.final_arv_status, DEFAULTER)
 
     def test_arv_status_with_evidence1(self):
@@ -1609,7 +1791,12 @@ class TestStatusHelper(TestCase):
             on_arv=NO,
             arv_evidence=NO)
 
-        obj = StatusHelper(visit=subject_visits[1])
+        obj = StatusHelper(visit=subject_visits[1], update_history=True)
+        self.assertEqual(obj.final_hiv_status, POS)
+        self.assertEqual(obj.current.arv_evidence, NO)
+        self.assertEqual(obj.final_arv_status, NAIVE)
+
+        obj = StatusDbHelper(visit=subject_visits[1])
         self.assertEqual(obj.final_hiv_status, POS)
         self.assertEqual(obj.current.arv_evidence, NO)
         self.assertEqual(obj.final_arv_status, NAIVE)
@@ -1655,7 +1842,12 @@ class TestStatusHelper(TestCase):
             on_arv=YES,
             arv_evidence=YES)
 
-        obj = StatusHelper(visit=subject_visits[0])
+        obj = StatusHelper(visit=subject_visits[0], update_history=True)
+        self.assertEqual(obj.final_hiv_status, POS)
+        self.assertEqual(obj.current.arv_evidence, YES)
+        self.assertEqual(obj.final_arv_status, ON_ART)
+
+        obj = StatusDbHelper(visit=subject_visits[0])
         self.assertEqual(obj.final_hiv_status, POS)
         self.assertEqual(obj.current.arv_evidence, YES)
         self.assertEqual(obj.final_arv_status, ON_ART)
@@ -1729,7 +1921,12 @@ class TestStatusHelper(TestCase):
             on_arv=YES,
             arv_evidence=YES)
 
-        obj = StatusHelper(visit=subject_visits[1])
+        obj = StatusHelper(visit=subject_visits[1], update_history=True)
+        self.assertEqual(obj.final_hiv_status, POS)
+        self.assertEqual(obj.current.arv_evidence, YES)
+        self.assertEqual(obj.final_arv_status, ON_ART)
+
+        obj = StatusDbHelper(visit=subject_visits[1])
         self.assertEqual(obj.final_hiv_status, POS)
         self.assertEqual(obj.current.arv_evidence, YES)
         self.assertEqual(obj.final_arv_status, ON_ART)
@@ -1764,7 +1961,11 @@ class TestStatusHelper(TestCase):
             hiv_result=POS,
             hiv_result_datetime=Arrow.fromdate(date(2015, 11, 4)).datetime)
 
-        obj = StatusHelper(visit=subject_visits[0])
+        obj = StatusHelper(visit=subject_visits[0], update_history=True)
+        self.assertEqual(obj.final_hiv_status, POS)
+        self.assertEqual(obj.final_hiv_status_date, date(2015, 11, 4))
+
+        obj = StatusDbHelper(visit=subject_visits[0])
         self.assertEqual(obj.final_hiv_status, POS)
         self.assertEqual(obj.final_hiv_status_date, date(2015, 11, 4))
 
@@ -1811,10 +2012,16 @@ class TestStatusHelper(TestCase):
             on_arv=NO,
             arv_evidence=YES)
 
-        obj = StatusHelper(visit=subject_visits[0])
+        obj = StatusHelper(visit=subject_visits[0], update_history=True)
         self.assertTrue(obj.defaulter_at_baseline)
 
-        obj = StatusHelper(visit=subject_visits[1])
+        obj = StatusDbHelper(visit=subject_visits[0])
+        self.assertTrue(obj.defaulter_at_baseline)
+
+        obj = StatusHelper(visit=subject_visits[1], update_history=True)
+        self.assertTrue(obj.defaulter_at_baseline)
+
+        obj = StatusDbHelper(visit=subject_visits[1])
         self.assertTrue(obj.defaulter_at_baseline)
 
         # hivcareadherence
@@ -1826,7 +2033,13 @@ class TestStatusHelper(TestCase):
             on_arv=YES,
             arv_evidence=YES)
 
-        obj = StatusHelper(visit=subject_visits[1])
+        obj = StatusHelper(visit=subject_visits[1], update_history=True)
+        self.assertEqual(obj.final_arv_status, ON_ART)
+        self.assertTrue(obj.defaulter_at_baseline)
+        self.assertEqual(obj.final_arv_status_baseline, DEFAULTER)
+        self.assertFalse(obj.naive_at_baseline)
+
+        obj = StatusDbHelper(visit=subject_visits[1])
         self.assertEqual(obj.final_arv_status, ON_ART)
         self.assertTrue(obj.defaulter_at_baseline)
         self.assertEqual(obj.final_arv_status_baseline, DEFAULTER)
@@ -1853,7 +2066,10 @@ class TestStatusHelper(TestCase):
             other_record=YES,
             has_tested=YES,
             verbal_hiv_result=POS)
-        obj = StatusHelper(visit=subject_visits[0])
+        obj = StatusHelper(visit=subject_visits[0], update_history=True)
+        self.assertFalse(obj.known_positive)
+
+        obj = StatusDbHelper(visit=subject_visits[0])
         self.assertFalse(obj.known_positive)
 
         # hivtestreview
@@ -1863,5 +2079,8 @@ class TestStatusHelper(TestCase):
             visit_code='T0',
             recorded_hiv_result=POS,
             hiv_test_date=(report_datetime - relativedelta(days=50)).date())
-        obj = StatusHelper(visit=subject_visits[0])
+        obj = StatusHelper(visit=subject_visits[0], update_history=True)
+        self.assertTrue(obj.known_positive)
+
+        obj = StatusDbHelper(visit=subject_visits[0])
         self.assertTrue(obj.known_positive)
