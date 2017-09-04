@@ -164,6 +164,7 @@ class StatusHelper:
             'subject_identifier': self.subject_identifier,
             'source_object_name': self.source_object_name,
             'today_hiv_result': self.current.today_hiv_result,
+            'baseline_hiv_result': self.baseline.today_hiv_result,
             'current_hiv_result': self.current.today_hiv_result,
             'current_arv_evidence': self.current.arv_evidence,
             'declined': self.declined,
