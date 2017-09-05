@@ -1,9 +1,9 @@
-from faker import Faker
 from datetime import date
 from django.test import TestCase, tag
 from edc_base.utils import get_utcnow
 from edc_constants.constants import NEG, POS, UNK, YES, NAIVE
 from edc_reference.tests import ReferenceTestHelper
+from faker import Faker
 
 from ..status_helper import StatusHelper
 from ..models import StatusHistory

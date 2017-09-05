@@ -49,6 +49,27 @@ class StatusHelperTestMixin:
             hiv_test_date=(visit.report_datetime - relativedelta(days=50)).date())
         status_helper = StatusHelper(visit=visit, update_history=True)
         assert status_helper.known_positive
+        assert status_helper.final_hiv_status == POS
+
+    def prepare_interim_pos(self, visit=None):
+        # hivtestinghistory
+        self.reference_helper.create_for_model(
+            report_datetime=visit.report_datetime,
+            model='hivtestinghistory',
+            visit_code=visit.visit_code,
+            other_record=YES,
+            has_tested=YES,
+            verbal_hiv_result=POS)
+        StatusHelper(visit=visit, update_history=True)
+        # hivtestreview
+        self.reference_helper.create_for_model(
+            report_datetime=visit.report_datetime,
+            model='hivtestreview',
+            visit_code=visit.visit_code,
+            recorded_hiv_result=POS,
+            hiv_test_date=(visit.report_datetime - relativedelta(days=50)).date())
+        status_helper = StatusHelper(visit=visit, update_history=True)
+        assert status_helper.documented_pos == YES
 
     def prepare_hiv_status(self, visit=None, result=None):
         if result == POS:
@@ -121,6 +142,7 @@ class StatusHelperTestMixin:
             visit_code=visit.visit_code,
             hiv_result=result,
             hiv_result_datetime=visit.report_datetime)
+        StatusHelper(visit=visit, update_history=True)
 
         # hivtestinghistory
         if result == POS:
@@ -131,6 +153,7 @@ class StatusHelperTestMixin:
                 other_record=YES,
                 has_tested=YES,
                 verbal_hiv_result=result)
+            StatusHelper(visit=visit, update_history=True)
 
         # hivtestreview
         self.reference_helper.create_for_model(
@@ -139,6 +162,7 @@ class StatusHelperTestMixin:
             visit_code=visit.visit_code,
             recorded_hiv_result=result,
             hiv_test_date=(visit.report_datetime - relativedelta(days=50)).date())
+        StatusHelper(visit=visit, update_history=True)
 
         # hivcareadherence
         self.reference_helper.create_for_model(
@@ -149,6 +173,7 @@ class StatusHelperTestMixin:
             on_arv=on_arv,
             arv_evidence=arv_evidence)
         status_helper = StatusHelper(visit=visit, update_history=True)
+
         assert status_helper.final_hiv_status == POS
         if defaulter:
             assert status_helper.final_arv_status == DEFAULTER

@@ -1,17 +1,15 @@
 from arrow.arrow import Arrow
-from faker import Faker
 from datetime import date, timedelta, datetime
 from dateutil.relativedelta import relativedelta
-
 from django.test import TestCase, tag
-
 from edc_base.utils import get_utcnow
 from edc_constants.constants import NEG, POS, UNK, YES, IND, NAIVE, NO
-from edc_reference.tests import ReferenceTestHelper
 from edc_reference import LongitudinalRefset, site_reference_configs
+from edc_reference.tests import ReferenceTestHelper
+from faker import Faker
 
+from ..status_db_helper import StatusDbHelper
 from ..status_helper import StatusHelper, DEFAULTER, ART_PRESCRIPTION, ON_ART
-from bcpp_status.status_db_helper import StatusDbHelper
 
 MICROTUBE = 'Microtube'
 T1 = 'T1'
@@ -48,6 +46,10 @@ class TestStatusHelper(TestCase):
             'today_hiv_result': None,
             'today_hiv_result_date': None,
         }
+
+    def validate(self, subject_visits=None):
+        for subject_visit in subject_visits:
+            StatusDbHelper(visit=subject_visit, validate=True)
 
     def test(self):
         self.assertIn('hiv_result', site_reference_configs.get_fields(
@@ -87,6 +89,8 @@ class TestStatusHelper(TestCase):
         # from StatusDbHelper
         status_helper = StatusDbHelper(visit=subject_visits[1])
         self.assertEqual(status_helper.subject_visit, subject_visits[1])
+
+        self.validate(subject_visits=subject_visits)
 
     def test_init_with_data(self):
         report_datetime = get_utcnow()
@@ -140,6 +144,8 @@ class TestStatusHelper(TestCase):
             visit=subject_visits[0], update_history=True))
 
         self.assertTrue(StatusDbHelper(visit=subject_visits[0]))
+
+        self.validate(subject_visits=subject_visits)
 
     def test_init_with_data_and_db_helper_creates(self):
         report_datetime = get_utcnow()
