@@ -108,7 +108,7 @@ class StatusHelper:
                     self._current = self.current_cls(visit=subject_visit)
             if not self._current:
                 Reference = django_apps.get_model('edc_reference.reference')
-                model = model = self.subject_visit._meta.label_lower
+                model = self.subject_visit._meta.label_lower
                 qs = Reference.objects.filter(
                     identifier=self.subject_identifier, model=model)
                 raise StatusHelperError(
