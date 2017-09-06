@@ -10,6 +10,8 @@ from .parser import datetime_parser
 
 class StatusDbHelper:
 
+    current_cls = Current
+
     def __init__(self, visit=None, subject_identifier=None, validate=None):
         if visit:
             self.report_datetime = visit.report_datetime
@@ -31,7 +33,7 @@ class StatusDbHelper:
             if not k.startswith('_'):
                 setattr(self, k, v)
 
-        self.current = Current(
+        self.current = self.current_cls(
             today_hiv_result=self.current_hiv_result,
             arv_evidence=self.current_arv_evidence)
 

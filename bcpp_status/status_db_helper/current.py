@@ -12,4 +12,4 @@ class Current:
             setattr(self, k, v)
 
     def __str__(self):
-        return self.today_hiv_result
+        return self.today_hiv_result or '?'

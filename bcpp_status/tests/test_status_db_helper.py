@@ -10,6 +10,7 @@ from faker import Faker
 from ..status_helper import StatusHelper, DEFAULTER
 from ..status_db_helper import StatusDbHelper
 from .status_helper_test_mixin import StatusHelperTestMixin
+from bcpp_status.status_db_helper.current import Current
 
 MICROTUBE = 'Microtube'
 T1 = 'T1'
@@ -44,6 +45,18 @@ class TestStatusHelper(StatusHelperTestMixin, TestCase):
             model=self.visit_model,
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
+
+    @tag('1')
+    def test_str(self):
+        current = Current()
+        self.assertTrue(str(current))
+        self.prepare_art_status(
+            visit=self.subject_visits[0], defaulter=True)
+        self.prepare_art_status(
+            visit=self.subject_visits[1], defaulter=True)
+        status_helper = StatusHelper(
+            visit=self.subject_visits[1], update_history=True)
+        self.assertTrue(str(status_helper))
 
     def test_final_hiv_status(self):
         self.prepare_art_status(

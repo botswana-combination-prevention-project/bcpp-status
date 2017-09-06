@@ -50,6 +50,7 @@ class TestStatusHelper(StatusHelperTestMixin, TestCase):
         StatusDbHelper(visit=self.subject_visits[1], validate=True)
         StatusDbHelper(visit=self.subject_visits[2], validate=True)
 
+    @tag('2')
     def test_final_hiv_status(self):
         self.prepare_art_status(
             visit=self.subject_visits[0], defaulter=True)
@@ -65,6 +66,7 @@ class TestStatusHelper(StatusHelperTestMixin, TestCase):
 
         self.validate()
 
+    @tag('2')
     def test_final_hiv_status_1(self):
         self.prepare_art_status(
             visit=self.subject_visits[1], defaulter=True)
@@ -87,6 +89,7 @@ class TestStatusHelper(StatusHelperTestMixin, TestCase):
 
         self.validate()
 
+    @tag('2')
     def test_final_hiv_status_2(self):
         self.prepare_art_status(
             visit=self.subject_visits[2], defaulter=True)
@@ -100,6 +103,7 @@ class TestStatusHelper(StatusHelperTestMixin, TestCase):
 
         self.validate()
 
+    @tag('2')
     def test_final_hiv_status_a(self):
         self.prepare_art_status(
             visit=self.subject_visits[2], defaulter=True)
