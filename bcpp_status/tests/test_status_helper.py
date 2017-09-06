@@ -57,7 +57,6 @@ class TestStatusHelper(TestCase):
         self.assertIn('arv_evidence', site_reference_configs.get_fields(
             'bcpp_subject.HivCareAdherence'))
 
-    @tag('2')
     def test_visit(self):
         """Assert picks up the correct visit.
         """

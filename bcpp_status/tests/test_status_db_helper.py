@@ -18,7 +18,6 @@ T1 = 'T1'
 fake = Faker()
 
 
-@tag('1')
 class TestStatusHelper(StatusHelperTestMixin, TestCase):
 
     reference_helper_cls = ReferenceTestHelper
@@ -46,7 +45,6 @@ class TestStatusHelper(StatusHelperTestMixin, TestCase):
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
-    @tag('1')
     def test_str(self):
         current = Current()
         self.assertTrue(str(current))
