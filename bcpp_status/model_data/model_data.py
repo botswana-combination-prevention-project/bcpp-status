@@ -1,5 +1,5 @@
 from django.apps import apps as django_apps
-from edc_reference.site import site_reference_configs
+from edc_reference import site_reference_configs
 
 from .elisa_result import ElisaResult
 from .hiv_care_adherence import HivCareAdherence
@@ -28,12 +28,12 @@ class ModelData:
     hiv_result_documentation_cls = HivResultDocumentation
 
     def __init__(self, subject_identifier=None, report_datetime=None, baseline=None,
-                 visit_model=None, app_label=None):
+                 visit_model=None):
         if visit_model:
             self.visit_model = visit_model
         self.baseline = baseline
         self.reference_model_cls = django_apps.get_model(
-            site_reference_configs.get_reference_model(self.visit_model))
+            site_reference_configs.get_reference_model(name=self.visit_model))
         self.report_datetime = report_datetime
         self.subject_identifier = subject_identifier
         self.values = {}
@@ -41,8 +41,7 @@ class ModelData:
             subject_identifier=subject_identifier,
             report_datetime=report_datetime,
             baseline=baseline,
-            visit_model=self.visit_model,
-            app_label=app_label)
+            visit_model=self.visit_model)
 
         values_classes = [
             self.elisa_result_cls,

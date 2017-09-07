@@ -16,6 +16,7 @@ class TestStatusHistory(TestCase):
     reference_helper_cls = ReferenceTestHelper
     visit_model = 'bcpp_subject.subjectvisit'
     reference_model = 'edc_reference.reference'
+    app_label = 'bcpp_subject'
 
     def setUp(self):
         self.subject_identifier = '111111111'
@@ -48,7 +49,7 @@ class TestStatusHistory(TestCase):
         # hivresult
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresult',
+            reference_name=f'{self.app_label}.hivresult',
             visit_code='bhs',
             hiv_result=POS,
             hiv_result_date=date(2016, 1, 7))
@@ -56,7 +57,7 @@ class TestStatusHistory(TestCase):
         # hivtestreview
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivtestreview',
+            reference_name=f'{self.app_label}.hivtestreview',
             visit_code='bhs',
             recorded_hiv_result=NEG,
             hiv_test_date=date(2013, 5, 7))
@@ -64,7 +65,7 @@ class TestStatusHistory(TestCase):
         # hivtestinghistory
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivtestinghistory',
+            reference_name=f'{self.app_label}.hivtestinghistory',
             visit_code='bhs',
             other_record=UNK,
             has_tested=YES,

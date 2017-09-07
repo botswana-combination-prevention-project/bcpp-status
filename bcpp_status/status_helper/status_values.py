@@ -9,8 +9,7 @@ class StatusValues:
         model_data = self.model_data_cls(
             subject_identifier=visit.subject_identifier,
             report_datetime=visit.report_datetime,
-            visit_model=visit.model,
-            app_label=visit.model.split('.')[0])
+            visit_model=visit.model)
         self.subject_identifier = visit.subject_identifier
         self.report_datetime = visit.report_datetime
         self.visit_code = visit.visit_code

@@ -39,9 +39,9 @@ class TestStatusHelper(StatusHelperTestMixin, TestCase):
         self.reference_helper.create_visit(
             report_datetime=report_datetime + relativedelta(years=2), timepoint='T2')
         self.subject_visits = LongitudinalRefset(
+            name=self.visit_model,
             subject_identifier=self.subject_identifier,
             visit_model=self.visit_model,
-            model=self.visit_model,
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 

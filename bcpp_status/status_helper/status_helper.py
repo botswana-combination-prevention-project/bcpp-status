@@ -181,9 +181,9 @@ class StatusHelper:
     def subject_visits(self):
         if not self._subject_visits:
             opts = dict(
+                name=self.visit_model,
                 subject_identifier=self.subject_identifier,
                 visit_model=self.visit_model,
-                model=self.visit_model,
                 reference_model_cls=self.reference_model)
             self._subject_visits = LongitudinalRefset(
                 **opts).order_by('report_datetime')

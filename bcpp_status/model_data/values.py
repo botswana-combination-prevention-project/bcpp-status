@@ -9,21 +9,19 @@ class Values:
     visit_model = None
 
     def __init__(self, subject_identifier=None, report_datetime=None,
-                 baseline=None, visit_model=None, app_label=None):
+                 baseline=None, visit_model=None):
         if visit_model:
             self.visit_model = visit_model
         self.values = {}
         self.baseline = baseline
         self.subject_identifier = subject_identifier
         self.report_datetime = report_datetime
-        if app_label:
-            self.model = f'{app_label}.{self.model.split(".")[1]}'
         self.reference_model_cls = django_apps.get_model(
-            site_reference_configs.get_reference_model(self.visit_model))
+            site_reference_configs.get_reference_model(name=self.visit_model))
         self.longitudinal_refset = LongitudinalRefset(
+            name=self.model,
             subject_identifier=self.subject_identifier,
             visit_model=self.visit_model,
-            model=self.model,
             reference_model_cls=self.reference_model_cls,
             **self.options).order_by('report_datetime')
 
