@@ -95,6 +95,7 @@ class StatusHelper:
         self.current_hiv_result = self.current.today_hiv_result
         self.today_hiv_result = self.current.today_hiv_result
         self.current_arv_evidence = self.current.arv_evidence
+        self.baseline_hiv_result = self.baseline.today_hiv_result
         self.visit_code = self.subject_visit.visit_code
         self.visit_date = self.subject_visit.report_datetime.date()
         if update_history:

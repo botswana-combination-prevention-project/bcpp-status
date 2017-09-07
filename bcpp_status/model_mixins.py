@@ -18,3 +18,6 @@ class StatusHelperModelMixin(models.Model):
                 subject_identifier=self.appointment.subject_identifier,
                 timepoint=self.appointment.visit_code).delete()
         self.status_helper_cls(visit=self, update_history=True)
+
+    class Meta:
+        abstract = True
