@@ -28,11 +28,13 @@ class StatusHelperTestMixin:
 
     """
 
+    app_label = 'bcpp_subject'
+
     def prepare_known_positive(self, visit=None):
         # hivtestinghistory
         self.reference_helper.create_for_model(
+            reference_name=f'{self.app_label}.hivtestinghistory',
             report_datetime=visit.report_datetime,
-            model='hivtestinghistory',
             visit_code='T0',
             other_record=YES,
             has_tested=YES,
@@ -43,7 +45,7 @@ class StatusHelperTestMixin:
         # hivtestreview
         self.reference_helper.create_for_model(
             report_datetime=visit.report_datetime,
-            model='hivtestreview',
+            reference_name=f'{self.app_label}.hivtestreview',
             visit_code='T0',
             recorded_hiv_result=POS,
             hiv_test_date=(visit.report_datetime - relativedelta(days=50)).date())
@@ -55,7 +57,7 @@ class StatusHelperTestMixin:
         # hivtestinghistory
         self.reference_helper.create_for_model(
             report_datetime=visit.report_datetime,
-            model='hivtestinghistory',
+            reference_name=f'{self.app_label}.hivtestinghistory',
             visit_code=visit.visit_code,
             other_record=YES,
             has_tested=YES,
@@ -64,7 +66,7 @@ class StatusHelperTestMixin:
         # hivtestreview
         self.reference_helper.create_for_model(
             report_datetime=visit.report_datetime,
-            model='hivtestreview',
+            reference_name=f'{self.app_label}.hivtestreview',
             visit_code=visit.visit_code,
             recorded_hiv_result=POS,
             hiv_test_date=(visit.report_datetime - relativedelta(days=50)).date())
@@ -76,7 +78,7 @@ class StatusHelperTestMixin:
             # hivresult
             self.reference_helper.create_for_model(
                 report_datetime=visit.report_datetime,
-                model='hivresult',
+                reference_name=f'{self.app_label}.hivresult',
                 visit_code=visit.visit_code,
                 hiv_result=POS,
                 hiv_result_datetime=visit.report_datetime)
@@ -86,14 +88,14 @@ class StatusHelperTestMixin:
             # hivresult
             self.reference_helper.create_for_model(
                 report_datetime=visit.report_datetime,
-                model='hivresult',
+                reference_name=f'{self.app_label}.hivresult',
                 visit_code=visit.visit_code,
                 hiv_result=NEG,
                 hiv_result_datetime=visit.report_datetime)
             # hivtestreview
             self.reference_helper.create_for_model(
                 report_datetime=visit.report_datetime,
-                model='hivtestreview',
+                reference_name=f'{self.app_label}.hivtestreview',
                 visit_code=visit.visit_code,
                 recorded_hiv_result=NEG,
                 hiv_test_date=(visit.report_datetime - relativedelta(days=50)).date())
@@ -103,7 +105,7 @@ class StatusHelperTestMixin:
             # hivresult
             self.reference_helper.create_for_model(
                 report_datetime=visit.report_datetime,
-                model='hivresult',
+                reference_name=f'{self.app_label}.hivresult',
                 visit_code=visit.visit_code,
                 hiv_result=IND,
                 hiv_result_datetime=visit.report_datetime)
@@ -138,7 +140,7 @@ class StatusHelperTestMixin:
         # hivresult
         self.reference_helper.create_for_model(
             report_datetime=visit.report_datetime,
-            model='hivresult',
+            reference_name=f'{self.app_label}.hivresult',
             visit_code=visit.visit_code,
             hiv_result=result,
             hiv_result_datetime=visit.report_datetime)
@@ -148,7 +150,7 @@ class StatusHelperTestMixin:
         if result == POS:
             self.reference_helper.create_for_model(
                 report_datetime=visit.report_datetime,
-                model='hivtestinghistory',
+                reference_name=f'{self.app_label}.hivtestinghistory',
                 visit_code=visit.visit_code,
                 other_record=YES,
                 has_tested=YES,
@@ -158,7 +160,7 @@ class StatusHelperTestMixin:
         # hivtestreview
         self.reference_helper.create_for_model(
             report_datetime=visit.report_datetime,
-            model='hivtestreview',
+            reference_name=f'{self.app_label}.hivtestreview',
             visit_code=visit.visit_code,
             recorded_hiv_result=result,
             hiv_test_date=(visit.report_datetime - relativedelta(days=50)).date())
@@ -167,7 +169,7 @@ class StatusHelperTestMixin:
         # hivcareadherence
         self.reference_helper.create_for_model(
             report_datetime=visit.report_datetime,
-            model='hivcareadherence',
+            reference_name=f'{self.app_label}.hivcareadherence',
             visit_code=visit.visit_code,
             ever_taken_arv=ever_taken_arv,
             on_arv=on_arv,

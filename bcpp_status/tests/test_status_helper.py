@@ -4,7 +4,7 @@ from dateutil.relativedelta import relativedelta
 from django.test import TestCase, tag
 from edc_base.utils import get_utcnow
 from edc_constants.constants import NEG, POS, UNK, YES, IND, NAIVE, NO
-from edc_reference import LongitudinalRefset, site_reference_configs
+from edc_reference import LongitudinalRefset, site_reference_configs, get_reference_name
 from edc_reference.tests import ReferenceTestHelper
 from faker import Faker
 
@@ -22,6 +22,8 @@ class TestStatusHelper(TestCase):
     reference_helper_cls = ReferenceTestHelper
     visit_model = 'bcpp_subject.subjectvisit'
     reference_model = 'edc_reference.reference'
+
+    app_label = 'bcpp_subject'
 
     def setUp(self):
         self.subject_identifier = '111111111'
@@ -55,7 +57,7 @@ class TestStatusHelper(TestCase):
         self.assertIn('hiv_result', site_reference_configs.get_fields(
             'bcpp_subject.hivresult'))
         self.assertIn('arv_evidence', site_reference_configs.get_fields(
-            'bcpp_subject.HivCareAdherence'))
+            'bcpp_subject.hivcareadherence'))
 
     def test_visit(self):
         """Assert picks up the correct visit.
@@ -68,9 +70,9 @@ class TestStatusHelper(TestCase):
             report_datetime=report_datetime, timepoint='ahs')
 
         subject_visits = LongitudinalRefset(
+            name=self.visit_model,
             subject_identifier=self.subject_identifier,
             visit_model=self.visit_model,
-            model=self.visit_model,
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
@@ -100,14 +102,16 @@ class TestStatusHelper(TestCase):
 
         # hivcareadherence
         self.reference_helper.create_for_model(
-            report_datetime=report_datetime, model='hivcareadherence', visit_code='bhs',
+            report_datetime=report_datetime,
+            reference_name=f'{self.app_label}.hivcareadherence', visit_code='bhs',
             arv_evidence=(YES, 'CharField'),
             on_arv=(YES, 'CharField'),
             ever_taken_arv=(YES, 'CharField'))
 
         # hivtestinghistory
         self.reference_helper.create_for_model(
-            report_datetime=report_datetime, model='hivtestinghistory', visit_code='bhs',
+            report_datetime=report_datetime,
+            reference_name=f'{self.app_label}.hivtestinghistory', visit_code='bhs',
             verbal_hiv_result=(POS, 'CharField'),
             has_tested=(YES, 'CharField'),
             other_record=(YES, 'CharField'),
@@ -115,28 +119,31 @@ class TestStatusHelper(TestCase):
 
         # elisahivresult
         self.reference_helper.create_for_model(
-            report_datetime=report_datetime, model='elisahivresult', visit_code='bhs',
+            report_datetime=report_datetime,
+            reference_name=f'{self.app_label}.elisahivresult', visit_code='bhs',
             hiv_result=(POS, 'CharField'),
             hiv_result_datetime=(get_utcnow(), 'DateTimeField'))
 
         # hivresultdocumentation
         self.reference_helper.create_for_model(
-            report_datetime=report_datetime, model='hivresultdocumentation', visit_code='bhs',
+            report_datetime=report_datetime,
+            reference_name=f'{self.app_label}.hivresultdocumentation', visit_code='bhs',
             result_recorded=(POS, 'CharField'),
             result_date=(get_utcnow(), 'DateTimeField'),
             result_doc_type=(YES, 'CharField'))
 
         # hivtestreview
         self.reference_helper.create_for_model(
-            report_datetime=report_datetime, model='hivtestreview', visit_code='bhs',
+            report_datetime=report_datetime,
+            reference_name=f'{self.app_label}.hivtestreview', visit_code='bhs',
             recorded_hiv_result=(POS, 'CharField'),
             hiv_test_date=(get_utcnow(), 'DateTimeField'),
             result_doc_type=(YES, 'CharField'))
 
         subject_visits = LongitudinalRefset(
+            name=self.visit_model,
             subject_identifier=self.subject_identifier,
             visit_model=self.visit_model,
-            model=self.visit_model,
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
@@ -155,14 +162,16 @@ class TestStatusHelper(TestCase):
 
         # hivcareadherence
         self.reference_helper.create_for_model(
-            report_datetime=report_datetime, model='hivcareadherence', visit_code='bhs',
+            report_datetime=report_datetime,
+            reference_name=f'{self.app_label}.hivcareadherence', visit_code='bhs',
             arv_evidence=(YES, 'CharField'),
             on_arv=(YES, 'CharField'),
             ever_taken_arv=(YES, 'CharField'))
 
         # hivtestinghistory
         self.reference_helper.create_for_model(
-            report_datetime=report_datetime, model='hivtestinghistory', visit_code='bhs',
+            report_datetime=report_datetime,
+            reference_name=f'{self.app_label}.hivtestinghistory', visit_code='bhs',
             verbal_hiv_result=(POS, 'CharField'),
             has_tested=(YES, 'CharField'),
             other_record=(YES, 'CharField'),
@@ -170,28 +179,31 @@ class TestStatusHelper(TestCase):
 
         # elisahivresult
         self.reference_helper.create_for_model(
-            report_datetime=report_datetime, model='elisahivresult', visit_code='bhs',
+            report_datetime=report_datetime,
+            reference_name=f'{self.app_label}.elisahivresult', visit_code='bhs',
             hiv_result=(POS, 'CharField'),
             hiv_result_datetime=(get_utcnow(), 'DateTimeField'))
 
         # hivresultdocumentation
         self.reference_helper.create_for_model(
-            report_datetime=report_datetime, model='hivresultdocumentation', visit_code='bhs',
+            report_datetime=report_datetime,
+            reference_name=f'{self.app_label}.hivresultdocumentation', visit_code='bhs',
             result_recorded=(POS, 'CharField'),
             result_date=(get_utcnow(), 'DateTimeField'),
             result_doc_type=(YES, 'CharField'))
 
         # hivtestreview
         self.reference_helper.create_for_model(
-            report_datetime=report_datetime, model='hivtestreview', visit_code='bhs',
+            report_datetime=report_datetime,
+            reference_name=f'{self.app_label}.hivtestreview', visit_code='bhs',
             recorded_hiv_result=(POS, 'CharField'),
             hiv_test_date=(get_utcnow(), 'DateTimeField'),
             result_doc_type=(YES, 'CharField'))
 
         subject_visits = LongitudinalRefset(
+            name=self.visit_model,
             subject_identifier=self.subject_identifier,
             visit_model=self.visit_model,
-            model=self.visit_model,
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
@@ -206,7 +218,7 @@ class TestStatusHelper(TestCase):
         # hivresult
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresult',
+            reference_name=f'{self.app_label}.hivresult',
             visit_code='bhs',
             hiv_result=POS,
             hiv_result_date=date(2016, 1, 7))
@@ -214,7 +226,7 @@ class TestStatusHelper(TestCase):
         # hivtestreview
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivtestreview',
+            reference_name=f'{self.app_label}.hivtestreview',
             visit_code='bhs',
             recorded_hiv_result=NEG,
             hiv_test_date=date(2013, 5, 7))
@@ -222,7 +234,7 @@ class TestStatusHelper(TestCase):
         # hivtestinghistory
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivtestinghistory',
+            reference_name=f'{self.app_label}.hivtestinghistory',
             visit_code='bhs',
             other_record=UNK,
             has_tested=YES,
@@ -251,14 +263,15 @@ class TestStatusHelper(TestCase):
 
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='subjectrequisition',
+            reference_name=get_reference_name(
+                f'{self.app_label}.subjectrequisition', MICROTUBE),
             visit_code='T0',
             panel_name=MICROTUBE,
             is_drawn=YES)
 
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivtestinghistory',
+            reference_name=f'{self.app_label}.hivtestinghistory',
             visit_code='T0',
             other_record=UNK,
             has_tested=YES,
@@ -267,14 +280,14 @@ class TestStatusHelper(TestCase):
         # hivtestreview
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivtestreview',
+            reference_name=f'{self.app_label}.hivtestreview',
             visit_code='T0',
             recorded_hiv_result=NEG,
             hiv_test_date=(report_datetime - relativedelta(days=10)).date())
 
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresult',
+            reference_name=f'{self.app_label}.hivresult',
             visit_code='T0',
             hiv_result=NEG,
             hiv_result_datetime=report_datetime)
@@ -286,7 +299,8 @@ class TestStatusHelper(TestCase):
 
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='subjectrequisition',
+            reference_name=get_reference_name(
+                f'{self.app_label}.subjectrequisition', MICROTUBE),
             visit_code='T1',
             panel_name=MICROTUBE,
             is_drawn=YES)
@@ -294,7 +308,7 @@ class TestStatusHelper(TestCase):
         # hivtestinghistory
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivtestinghistory',
+            reference_name=f'{self.app_label}.hivtestinghistory',
             visit_code='T1',
             other_record=UNK,
             has_tested=YES,
@@ -303,7 +317,7 @@ class TestStatusHelper(TestCase):
         # hivcareadherence
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivcareadherence',
+            reference_name=f'{self.app_label}.hivcareadherence',
             visit_code='T1',
             ever_taken_arv=NO,
             on_arv=NO,
@@ -312,15 +326,15 @@ class TestStatusHelper(TestCase):
         # hivresult
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresult',
+            reference_name=f'{self.app_label}.hivresult',
             visit_code='T1',
             hiv_result=POS,
             hiv_result_datetime=report_datetime)
 
         subject_visits = LongitudinalRefset(
+            name=self.visit_model,
             subject_identifier=self.subject_identifier,
             visit_model=self.visit_model,
-            model=self.visit_model,
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
@@ -344,15 +358,15 @@ class TestStatusHelper(TestCase):
         # hivresult
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresult',
+            reference_name=f'{self.app_label}.hivresult',
             visit_code='T0',
             hiv_result=POS,
             hiv_result_datetime=report_datetime)
 
         subject_visits = LongitudinalRefset(
+            name=self.visit_model,
             subject_identifier=self.subject_identifier,
             visit_model=self.visit_model,
-            model=self.visit_model,
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
@@ -376,8 +390,9 @@ class TestStatusHelper(TestCase):
         self.reference_helper.create_visit(
             report_datetime=report_datetime, timepoint='T0')
         self.reference_helper.create_for_model(
+            reference_name=get_reference_name(
+                f'{self.app_label}.subjectrequisition', MICROTUBE),
             report_datetime=report_datetime,
-            model='subjectrequisition',
             visit_code='T0',
             panel_name=MICROTUBE,
             is_drawn=YES)
@@ -385,7 +400,7 @@ class TestStatusHelper(TestCase):
         # hivresult
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresult',
+            reference_name=f'{self.app_label}.hivresult',
             visit_code='T0',
             hiv_result=POS,
             hiv_result_datetime=report_datetime)
@@ -393,16 +408,16 @@ class TestStatusHelper(TestCase):
         # hivtestinghistory
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivtestinghistory',
+            reference_name=f'{self.app_label}.hivtestinghistory',
             visit_code='T0',
             other_record=NO,
             has_tested=YES,
             verbal_hiv_result=POS)
 
         subject_visits = LongitudinalRefset(
+            name=self.visit_model,
             subject_identifier=self.subject_identifier,
             visit_model=self.visit_model,
-            model=self.visit_model,
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
@@ -434,16 +449,16 @@ class TestStatusHelper(TestCase):
         self.reference_helper.create_visit(
             report_datetime=report_datetime + timedelta(days=365), timepoint='T1')
         subject_visits = LongitudinalRefset(
+            name=self.visit_model,
             subject_identifier=self.subject_identifier,
             visit_model=self.visit_model,
-            model=self.visit_model,
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
         # hivtestreview
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivtestreview',
+            reference_name=f'{self.app_label}.hivtestreview',
             visit_code='T0',
             recorded_hiv_result=NEG,
             hiv_test_date=Arrow.fromdate(date(2013, 5, 7)).date())
@@ -451,7 +466,7 @@ class TestStatusHelper(TestCase):
         # hivresultdocumentation
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresultdocumentation',
+            reference_name=f'{self.app_label}.hivresultdocumentation',
             visit_code='T0',
             result_recorded=POS,
             result_date=Arrow.fromdate(date(2013, 5, 7)).date(),
@@ -460,7 +475,7 @@ class TestStatusHelper(TestCase):
         # hivcareadherence
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivcareadherence',
+            reference_name=f'{self.app_label}.hivcareadherence',
             visit_code='T0',
             ever_taken_arv=NO,
             on_arv=NO)
@@ -485,22 +500,24 @@ class TestStatusHelper(TestCase):
         self.reference_helper.create_visit(
             report_datetime=report_datetime + timedelta(days=365), timepoint='T1')
         subject_visits = LongitudinalRefset(
+            name=self.visit_model,
             subject_identifier=self.subject_identifier,
             visit_model=self.visit_model,
-            model=self.visit_model,
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
         self.reference_helper.create_for_model(
             report_datetime=subject_visits[0].report_datetime,
-            model='subjectrequisition',
+            reference_name=get_reference_name(
+                f'{self.app_label}.subjectrequisition', MICROTUBE),
             visit_code='T0',
             panel_name=MICROTUBE,
             is_drawn=YES)
 
         self.reference_helper.create_for_model(
             report_datetime=subject_visits[1].report_datetime,
-            model='subjectrequisition',
+            reference_name=get_reference_name(
+                f'{self.app_label}.subjectrequisition', MICROTUBE),
             visit_code='T1',
             panel_name=MICROTUBE,
             is_drawn=YES)
@@ -508,7 +525,7 @@ class TestStatusHelper(TestCase):
         # hivtestinghistory
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivtestinghistory',
+            reference_name=f'{self.app_label}.hivtestinghistory',
             visit_code='T0',
             other_record=NO,
             has_tested=YES,
@@ -520,7 +537,7 @@ class TestStatusHelper(TestCase):
         # hivtestreview
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivtestreview',
+            reference_name=f'{self.app_label}.hivtestreview',
             visit_code='T0',
             recorded_hiv_result=NEG,
             hiv_test_date=hiv_test_date)
@@ -528,7 +545,7 @@ class TestStatusHelper(TestCase):
         # hivresult
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresult',
+            reference_name=f'{self.app_label}.hivresult',
             visit_code='T0',
             hiv_result=NEG,
             hiv_result_datetime=report_datetime)
@@ -538,7 +555,7 @@ class TestStatusHelper(TestCase):
         # hivtestinghistory
         self.reference_helper.create_for_model(
             report_datetime=subject_visits[1].report_datetime,
-            model='hivtestinghistory',
+            reference_name=f'{self.app_label}.hivtestinghistory',
             visit_code='T1',
             other_record=NO,
             has_tested=YES,
@@ -547,7 +564,7 @@ class TestStatusHelper(TestCase):
         # hivcareadherence
         self.reference_helper.create_for_model(
             report_datetime=subject_visits[1].report_datetime,
-            model='hivcareadherence',
+            reference_name=f'{self.app_label}.hivcareadherence',
             visit_code='T1',
             ever_taken_arv=NO,
             on_arv=NO,
@@ -556,7 +573,7 @@ class TestStatusHelper(TestCase):
         # hivresult
         self.reference_helper.create_for_model(
             report_datetime=subject_visits[1].report_datetime,
-            model='hivresult',
+            reference_name=f'{self.app_label}.hivresult',
             visit_code='T1',
             hiv_result=POS,
             hiv_result_datetime=subject_visits[1].report_datetime)
@@ -585,16 +602,16 @@ class TestStatusHelper(TestCase):
         self.reference_helper.create_visit(
             report_datetime=report_datetime + timedelta(days=365), timepoint='T1')
         subject_visits = LongitudinalRefset(
+            name=self.visit_model,
             subject_identifier=self.subject_identifier,
             visit_model=self.visit_model,
-            model=self.visit_model,
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
         # hivresult
         self.reference_helper.create_for_model(
             report_datetime=subject_visits[0].report_datetime,
-            model='hivresult',
+            reference_name=f'{self.app_label}.hivresult',
             visit_code='T0',
             hiv_result=POS,
             hiv_result_datetime=Arrow.fromdatetime(datetime(2016, 1, 7)).datetime)
@@ -602,7 +619,7 @@ class TestStatusHelper(TestCase):
         # hivtestreview
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivtestreview',
+            reference_name=f'{self.app_label}.hivtestreview',
             visit_code='T0',
             recorded_hiv_result=POS,
             hiv_test_date=Arrow.fromdate(date(2015, 1, 7)).date())
@@ -627,16 +644,16 @@ class TestStatusHelper(TestCase):
         self.reference_helper.create_visit(
             report_datetime=report_datetime, timepoint='T0')
         subject_visits = LongitudinalRefset(
+            name=self.visit_model,
             subject_identifier=self.subject_identifier,
             visit_model=self.visit_model,
-            model=self.visit_model,
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
         # hivtestinghistory
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivtestinghistory',
+            reference_name=f'{self.app_label}.hivtestinghistory',
             visit_code='T0',
             other_record=NO,
             has_tested=YES,
@@ -645,7 +662,7 @@ class TestStatusHelper(TestCase):
         # hivtestreview
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivtestreview',
+            reference_name=f'{self.app_label}.hivtestreview',
             visit_code='T0',
             recorded_hiv_result=POS,
             hiv_test_date=(report_datetime - relativedelta(days=10)).date())
@@ -653,7 +670,7 @@ class TestStatusHelper(TestCase):
         # hivresult
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresult',
+            reference_name=f'{self.app_label}.hivresult',
             visit_code='T0',
             hiv_result=POS,
             hiv_result_datetime=report_datetime)
@@ -674,16 +691,16 @@ class TestStatusHelper(TestCase):
         self.reference_helper.create_visit(
             report_datetime=report_datetime, timepoint='T0')
         subject_visits = LongitudinalRefset(
+            name=self.visit_model,
             subject_identifier=self.subject_identifier,
             visit_model=self.visit_model,
-            model=self.visit_model,
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
         # hivtestreview
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivtestreview',
+            reference_name=f'{self.app_label}.hivtestreview',
             visit_code='T0',
             recorded_hiv_result=POS,
             hiv_test_date=Arrow.fromdate(date(2015, 1, 7)).date())
@@ -691,7 +708,7 @@ class TestStatusHelper(TestCase):
         # hivresult
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresult',
+            reference_name=f'{self.app_label}.hivresult',
             visit_code='T0',
             hiv_result=POS,
             hiv_result_datetime=Arrow.fromdate(date(2016, 1, 7)).datetime)
@@ -712,16 +729,16 @@ class TestStatusHelper(TestCase):
         self.reference_helper.create_visit(
             report_datetime=report_datetime + relativedelta(years=1), timepoint='T1')
         subject_visits = LongitudinalRefset(
+            name=self.visit_model,
             subject_identifier=self.subject_identifier,
             visit_model=self.visit_model,
-            model=self.visit_model,
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
         # hivtestinghistory
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivtestinghistory',
+            reference_name=f'{self.app_label}.hivtestinghistory',
             visit_code='T0',
             other_record=NO,
             has_tested=YES,
@@ -730,7 +747,7 @@ class TestStatusHelper(TestCase):
         # hivtestreview
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivtestreview',
+            reference_name=f'{self.app_label}.hivtestreview',
             visit_code='T0',
             recorded_hiv_result=POS,
             hiv_test_date=Arrow.fromdatetime(
@@ -739,7 +756,7 @@ class TestStatusHelper(TestCase):
         # hivresult
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresult',
+            reference_name=f'{self.app_label}.hivresult',
             visit_code='T0',
             hiv_result=POS,
             hiv_result_datetime=Arrow.fromdate(date(2016, 1, 7)).datetime)
@@ -761,16 +778,16 @@ class TestStatusHelper(TestCase):
         self.reference_helper.create_visit(
             report_datetime=report_datetime, timepoint='T1')
         subject_visits = LongitudinalRefset(
+            name=self.visit_model,
             subject_identifier=self.subject_identifier,
             visit_model=self.visit_model,
-            model=self.visit_model,
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
         # hivresult
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresult',
+            reference_name=f'{self.app_label}.hivresult',
             visit_code='T0',
             hiv_result=POS,
             hiv_result_datetime=report_datetime)
@@ -778,7 +795,7 @@ class TestStatusHelper(TestCase):
         # hivtestreview
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivtestreview',
+            reference_name=f'{self.app_label}.hivtestreview',
             visit_code='T0',
             recorded_hiv_result=NEG,
             hiv_test_date=Arrow.fromdate(date(2015, 1, 7)).date())
@@ -804,16 +821,16 @@ class TestStatusHelper(TestCase):
         self.reference_helper.create_visit(
             report_datetime=report_datetime, timepoint='T1')
         subject_visits = LongitudinalRefset(
+            name=self.visit_model,
             subject_identifier=self.subject_identifier,
             visit_model=self.visit_model,
-            model=self.visit_model,
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
         # hivtestinghistory
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivtestinghistory',
+            reference_name=f'{self.app_label}.hivtestinghistory',
             visit_code='T0',
             other_record=NO,
             has_tested=YES,
@@ -822,7 +839,7 @@ class TestStatusHelper(TestCase):
         # hivtestreview
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivtestreview',
+            reference_name=f'{self.app_label}.hivtestreview',
             visit_code='T0',
             recorded_hiv_result=NEG,
             hiv_test_date=Arrow.fromdate(date(2015, 1, 7)).date())
@@ -830,7 +847,7 @@ class TestStatusHelper(TestCase):
         # hivresult
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresult',
+            reference_name=f'{self.app_label}.hivresult',
             visit_code='T0',
             hiv_result=NEG,
             hiv_result_datetime=report_datetime)
@@ -853,16 +870,16 @@ class TestStatusHelper(TestCase):
         self.reference_helper.create_visit(
             report_datetime=report_datetime, timepoint='T1')
         subject_visits = LongitudinalRefset(
+            name=self.visit_model,
             subject_identifier=self.subject_identifier,
             visit_model=self.visit_model,
-            model=self.visit_model,
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
         # hivresult
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresult',
+            reference_name=f'{self.app_label}.hivresult',
             visit_code='T0',
             hiv_result=POS,
             hiv_result_datetime=report_datetime)
@@ -870,7 +887,7 @@ class TestStatusHelper(TestCase):
         # hivtestreview
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivtestreview',
+            reference_name=f'{self.app_label}.hivtestreview',
             visit_code='T0',
             recorded_hiv_result=NEG,
             hiv_test_date=Arrow.fromdate(date(2015, 1, 7)).date())
@@ -878,7 +895,7 @@ class TestStatusHelper(TestCase):
         # hivresultdocumentation
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresultdocumentation',
+            reference_name=f'{self.app_label}.hivresultdocumentation',
             visit_code='T0',
             result_recorded=POS,
             result_date=Arrow.fromdate(date(2014, 1, 7)).date(),
@@ -906,16 +923,16 @@ class TestStatusHelper(TestCase):
         self.reference_helper.create_visit(
             report_datetime=report_datetime, timepoint='T1')
         subject_visits = LongitudinalRefset(
+            name=self.visit_model,
             subject_identifier=self.subject_identifier,
             visit_model=self.visit_model,
-            model=self.visit_model,
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
         # hivresult
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresult',
+            reference_name=f'{self.app_label}.hivresult',
             visit_code='T0',
             hiv_result=POS,
             hiv_result_datetime=report_datetime)
@@ -923,7 +940,7 @@ class TestStatusHelper(TestCase):
         # hivtestreview
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivtestreview',
+            reference_name=f'{self.app_label}.hivtestreview',
             visit_code='T0',
             recorded_hiv_result=NEG,
             hiv_test_date=Arrow.fromdate(date(2015, 1, 7)).date())
@@ -931,7 +948,7 @@ class TestStatusHelper(TestCase):
         # hivresultdocumentation
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresultdocumentation',
+            reference_name=f'{self.app_label}.hivresultdocumentation',
             visit_code='T0',
             result_recorded=POS,
             result_date=Arrow.fromdate(date(2014, 1, 7)).date(),
@@ -959,16 +976,16 @@ class TestStatusHelper(TestCase):
         self.reference_helper.create_visit(
             report_datetime=report_datetime, timepoint='T1')
         subject_visits = LongitudinalRefset(
+            name=self.visit_model,
             subject_identifier=self.subject_identifier,
             visit_model=self.visit_model,
-            model=self.visit_model,
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
         # hivresult
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresult',
+            reference_name=f'{self.app_label}.hivresult',
             visit_code='T0',
             hiv_result=POS,
             hiv_result_datetime=report_datetime)
@@ -976,7 +993,7 @@ class TestStatusHelper(TestCase):
         # hivtestreview
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivtestreview',
+            reference_name=f'{self.app_label}.hivtestreview',
             visit_code='T0',
             recorded_hiv_result=NEG,
             hiv_test_date=Arrow.fromdate(date(2015, 1, 7)).date())
@@ -984,7 +1001,7 @@ class TestStatusHelper(TestCase):
         # hivresultdocumentation
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresultdocumentation',
+            reference_name=f'{self.app_label}.hivresultdocumentation',
             visit_code='T0',
             result_recorded=NEG,
             result_date=Arrow.fromdate(date(2014, 1, 7)).date(),
@@ -1014,16 +1031,16 @@ class TestStatusHelper(TestCase):
         self.reference_helper.create_visit(
             report_datetime=report_datetime, timepoint='T1')
         subject_visits = LongitudinalRefset(
+            name=self.visit_model,
             subject_identifier=self.subject_identifier,
             visit_model=self.visit_model,
-            model=self.visit_model,
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
         # hivresult
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresult',
+            reference_name=f'{self.app_label}.hivresult',
             visit_code='T0',
             hiv_result=NEG,
             hiv_result_datetime=report_datetime)
@@ -1031,7 +1048,7 @@ class TestStatusHelper(TestCase):
         # hivtestreview
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivtestreview',
+            reference_name=f'{self.app_label}.hivtestreview',
             visit_code='T0',
             recorded_hiv_result=POS,
             hiv_test_date=Arrow.fromdate(date(2015, 1, 7)).date())
@@ -1058,16 +1075,16 @@ class TestStatusHelper(TestCase):
         self.reference_helper.create_visit(
             report_datetime=report_datetime, timepoint='T1')
         subject_visits = LongitudinalRefset(
+            name=self.visit_model,
             subject_identifier=self.subject_identifier,
             visit_model=self.visit_model,
-            model=self.visit_model,
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
         # hivresult
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresult',
+            reference_name=f'{self.app_label}.hivresult',
             visit_code='T0',
             hiv_result=NEG,
             hiv_result_datetime=report_datetime)
@@ -1075,7 +1092,7 @@ class TestStatusHelper(TestCase):
         # hivresultdocumentation
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresultdocumentation',
+            reference_name=f'{self.app_label}.hivresultdocumentation',
             visit_code='T0',
             result_recorded=POS,
             result_date=Arrow.fromdate(date(2015, 1, 7)).date(),
@@ -1103,16 +1120,16 @@ class TestStatusHelper(TestCase):
         self.reference_helper.create_visit(
             report_datetime=report_datetime, timepoint='T1')
         subject_visits = LongitudinalRefset(
+            name=self.visit_model,
             subject_identifier=self.subject_identifier,
             visit_model=self.visit_model,
-            model=self.visit_model,
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
         # hivresult
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresult',
+            reference_name=f'{self.app_label}.hivresult',
             visit_code='T0',
             hiv_result=NEG,
             hiv_result_datetime=report_datetime)
@@ -1120,7 +1137,7 @@ class TestStatusHelper(TestCase):
         # hivresultdocumentation
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresultdocumentation',
+            reference_name=f'{self.app_label}.hivresultdocumentation',
             visit_code='T0',
             result_recorded=POS,
             result_date=Arrow.fromdate(date(2015, 1, 7)).date(),
@@ -1148,16 +1165,16 @@ class TestStatusHelper(TestCase):
         self.reference_helper.create_visit(
             report_datetime=report_datetime, timepoint='T1')
         subject_visits = LongitudinalRefset(
+            name=self.visit_model,
             subject_identifier=self.subject_identifier,
             visit_model=self.visit_model,
-            model=self.visit_model,
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
         # hivresult
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresult',
+            reference_name=f'{self.app_label}.hivresult',
             visit_code='T0',
             hiv_result=NEG,
             hiv_result_datetime=report_datetime)
@@ -1165,7 +1182,7 @@ class TestStatusHelper(TestCase):
         # hivresultdocumentation
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresultdocumentation',
+            reference_name=f'{self.app_label}.hivresultdocumentation',
             visit_code='T0',
             result_recorded=POS,
             result_date=Arrow.fromdate(date(2014, 1, 7)).date(),
@@ -1174,7 +1191,7 @@ class TestStatusHelper(TestCase):
         # hivtestreview
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivtestreview',
+            reference_name=f'{self.app_label}.hivtestreview',
             visit_code='T0',
             recorded_hiv_result=NEG,
             hiv_test_date=Arrow.fromdate(date(2015, 1, 7)).date())
@@ -1203,16 +1220,16 @@ class TestStatusHelper(TestCase):
         self.reference_helper.create_visit(
             report_datetime=report_datetime, timepoint='T1')
         subject_visits = LongitudinalRefset(
+            name=self.visit_model,
             subject_identifier=self.subject_identifier,
             visit_model=self.visit_model,
-            model=self.visit_model,
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
         # hivresult
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresult',
+            reference_name=f'{self.app_label}.hivresult',
             visit_code='T0',
             hiv_result=POS,
             hiv_result_datetime=report_datetime)
@@ -1220,7 +1237,7 @@ class TestStatusHelper(TestCase):
         # hivresultdocumentation
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresultdocumentation',
+            reference_name=f'{self.app_label}.hivresultdocumentation',
             visit_code='T0',
             result_recorded=POS,
             result_date=Arrow.fromdate(date(2015, 1, 7)).date(),
@@ -1248,16 +1265,16 @@ class TestStatusHelper(TestCase):
         self.reference_helper.create_visit(
             report_datetime=report_datetime, timepoint='T1')
         subject_visits = LongitudinalRefset(
+            name=self.visit_model,
             subject_identifier=self.subject_identifier,
             visit_model=self.visit_model,
-            model=self.visit_model,
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
         # hivresult
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresult',
+            reference_name=f'{self.app_label}.hivresult',
             visit_code='T0',
             hiv_result=POS,
             hiv_result_datetime=report_datetime)
@@ -1265,7 +1282,7 @@ class TestStatusHelper(TestCase):
         # hivresultdocumentation
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresultdocumentation',
+            reference_name=f'{self.app_label}.hivresultdocumentation',
             visit_code='T0',
             result_recorded=NEG,
             result_date=Arrow.fromdate(date(2015, 1, 7)).date(),
@@ -1293,16 +1310,16 @@ class TestStatusHelper(TestCase):
         self.reference_helper.create_visit(
             report_datetime=report_datetime, timepoint='T1')
         subject_visits = LongitudinalRefset(
+            name=self.visit_model,
             subject_identifier=self.subject_identifier,
             visit_model=self.visit_model,
-            model=self.visit_model,
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
         # hivresult
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresult',
+            reference_name=f'{self.app_label}.hivresult',
             visit_code='T0',
             hiv_result=POS,
             hiv_result_datetime=report_datetime)
@@ -1310,7 +1327,7 @@ class TestStatusHelper(TestCase):
         # hivresultdocumentation
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresultdocumentation',
+            reference_name=f'{self.app_label}.hivresultdocumentation',
             visit_code='T0',
             result_recorded=NEG,
             result_date=Arrow.fromdate(date(2015, 1, 7)).date(),
@@ -1337,16 +1354,16 @@ class TestStatusHelper(TestCase):
         self.reference_helper.create_visit(
             report_datetime=report_datetime, timepoint='T1')
         subject_visits = LongitudinalRefset(
+            name=self.visit_model,
             subject_identifier=self.subject_identifier,
             visit_model=self.visit_model,
-            model=self.visit_model,
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
         # hivresult
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresult',
+            reference_name=f'{self.app_label}.hivresult',
             visit_code='T0',
             hiv_result=NEG,
             hiv_result_datetime=report_datetime)
@@ -1374,16 +1391,16 @@ class TestStatusHelper(TestCase):
         self.reference_helper.create_visit(
             report_datetime=report_datetime, timepoint='T1')
         subject_visits = LongitudinalRefset(
+            name=self.visit_model,
             subject_identifier=self.subject_identifier,
             visit_model=self.visit_model,
-            model=self.visit_model,
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
         # hivresult
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresult',
+            reference_name=f'{self.app_label}.hivresult',
             visit_code='T0',
             hiv_result=NEG,
             hiv_result_datetime=report_datetime)
@@ -1391,7 +1408,7 @@ class TestStatusHelper(TestCase):
         # hivtestinghistory
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivtestinghistory',
+            reference_name=f'{self.app_label}.hivtestinghistory',
             visit_code='T0',
             other_record=NO,
             has_tested=YES,
@@ -1418,16 +1435,16 @@ class TestStatusHelper(TestCase):
         self.reference_helper.create_visit(
             report_datetime=report_datetime, timepoint='T1')
         subject_visits = LongitudinalRefset(
+            name=self.visit_model,
             subject_identifier=self.subject_identifier,
             visit_model=self.visit_model,
-            model=self.visit_model,
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
         # hivresult
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresult',
+            reference_name=f'{self.app_label}.hivresult',
             visit_code='T0',
             hiv_result=POS,
             hiv_result_datetime=report_datetime)
@@ -1435,7 +1452,7 @@ class TestStatusHelper(TestCase):
         # hivtestreview
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivtestreview',
+            reference_name=f'{self.app_label}.hivtestreview',
             visit_code='T0',
             recorded_hiv_result=POS,
             hiv_test_date=Arrow.fromdate(date(2015, 1, 7)).date())
@@ -1443,7 +1460,7 @@ class TestStatusHelper(TestCase):
         # hivresultdocumentation
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresultdocumentation',
+            reference_name=f'{self.app_label}.hivresultdocumentation',
             visit_code='T0',
             result_recorded=NEG,
             result_date=Arrow.fromdate(date(2015, 1, 7)).date(),
@@ -1470,16 +1487,16 @@ class TestStatusHelper(TestCase):
         self.reference_helper.create_visit(
             report_datetime=report_datetime, timepoint='T1')
         subject_visits = LongitudinalRefset(
+            name=self.visit_model,
             subject_identifier=self.subject_identifier,
             visit_model=self.visit_model,
-            model=self.visit_model,
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
         # hivresult
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresult',
+            reference_name=f'{self.app_label}.hivresult',
             visit_code='T0',
             hiv_result=NEG,
             hiv_result_datetime=report_datetime)
@@ -1487,7 +1504,7 @@ class TestStatusHelper(TestCase):
         # hivresultdocumentation
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresultdocumentation',
+            reference_name=f'{self.app_label}.hivresultdocumentation',
             visit_code='T0',
             result_recorded=NEG,
             result_date=Arrow.fromdate(date(2015, 1, 7)).date(),
@@ -1514,16 +1531,16 @@ class TestStatusHelper(TestCase):
         self.reference_helper.create_visit(
             report_datetime=report_datetime, timepoint='T1')
         subject_visits = LongitudinalRefset(
+            name=self.visit_model,
             subject_identifier=self.subject_identifier,
             visit_model=self.visit_model,
-            model=self.visit_model,
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
         # hivresult
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresult',
+            reference_name=f'{self.app_label}.hivresult',
             visit_code='T0',
             hiv_result=NEG,
             hiv_result_datetime=report_datetime)
@@ -1531,7 +1548,7 @@ class TestStatusHelper(TestCase):
         # hivresultdocumentation
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresultdocumentation',
+            reference_name=f'{self.app_label}.hivresultdocumentation',
             visit_code='T0',
             result_recorded=NEG,
             result_date=Arrow.fromdate(date(2015, 1, 7)).date(),
@@ -1555,16 +1572,16 @@ class TestStatusHelper(TestCase):
         self.reference_helper.create_visit(
             report_datetime=report_datetime, timepoint='T1')
         subject_visits = LongitudinalRefset(
+            name=self.visit_model,
             subject_identifier=self.subject_identifier,
             visit_model=self.visit_model,
-            model=self.visit_model,
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
         # hivresult
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresult',
+            reference_name=f'{self.app_label}.hivresult',
             visit_code='T0',
             hiv_result=POS,
             hiv_result_datetime=report_datetime)
@@ -1572,7 +1589,7 @@ class TestStatusHelper(TestCase):
         # hivresultdocumentation
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresultdocumentation',
+            reference_name=f'{self.app_label}.hivresultdocumentation',
             visit_code='T0',
             result_recorded=NEG,
             result_date=Arrow.fromdate(date(2015, 1, 7)).date(),
@@ -1581,7 +1598,7 @@ class TestStatusHelper(TestCase):
         # hivcareadherence
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivcareadherence',
+            reference_name=f'{self.app_label}.hivcareadherence',
             visit_code='T1',
             ever_taken_arv=NO,
             on_arv=NO,
@@ -1607,16 +1624,16 @@ class TestStatusHelper(TestCase):
         self.reference_helper.create_visit(
             report_datetime=report_datetime, timepoint='T1')
         subject_visits = LongitudinalRefset(
+            name=self.visit_model,
             subject_identifier=self.subject_identifier,
             visit_model=self.visit_model,
-            model=self.visit_model,
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
         # hivresult
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresult',
+            reference_name=f'{self.app_label}.hivresult',
             visit_code='T0',
             hiv_result=POS,
             hiv_result_datetime=report_datetime)
@@ -1624,7 +1641,7 @@ class TestStatusHelper(TestCase):
         # hivresultdocumentation
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresultdocumentation',
+            reference_name=f'{self.app_label}.hivresultdocumentation',
             visit_code='T0',
             result_recorded=NEG,
             result_date=Arrow.fromdate(date(2015, 1, 7)).date(),
@@ -1633,7 +1650,7 @@ class TestStatusHelper(TestCase):
         # hivcareadherence
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivcareadherence',
+            reference_name=f'{self.app_label}.hivcareadherence',
             visit_code='T0',
             ever_taken_arv=NO,
             on_arv=NO)
@@ -1658,16 +1675,16 @@ class TestStatusHelper(TestCase):
         self.reference_helper.create_visit(
             report_datetime=report_datetime + relativedelta(years=1), timepoint='T1')
         subject_visits = LongitudinalRefset(
+            name=self.visit_model,
             subject_identifier=self.subject_identifier,
             visit_model=self.visit_model,
-            model=self.visit_model,
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
         # hivresult
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresult',
+            reference_name=f'{self.app_label}.hivresult',
             visit_code='T0',
             hiv_result=NEG,
             hiv_result_datetime=report_datetime)
@@ -1675,7 +1692,7 @@ class TestStatusHelper(TestCase):
         # hivtestinghistory
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivtestinghistory',
+            reference_name=f'{self.app_label}.hivtestinghistory',
             visit_code='T0',
             other_record=NO,
             has_tested=YES,
@@ -1684,7 +1701,7 @@ class TestStatusHelper(TestCase):
         # hivtestreview
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivtestreview',
+            reference_name=f'{self.app_label}.hivtestreview',
             visit_code='T0',
             recorded_hiv_result=NEG,
             hiv_test_date=(report_datetime - relativedelta(days=10)).date())
@@ -1693,7 +1710,7 @@ class TestStatusHelper(TestCase):
         # hivresult
         self.reference_helper.create_for_model(
             report_datetime=subject_visits[1].report_datetime,
-            model='hivresult',
+            reference_name=f'{self.app_label}.hivresult',
             visit_code='T1',
             hiv_result=POS,
             hiv_result_datetime=report_datetime)
@@ -1701,7 +1718,7 @@ class TestStatusHelper(TestCase):
         # hivtestinghistory
         self.reference_helper.create_for_model(
             report_datetime=subject_visits[1].report_datetime,
-            model='hivtestinghistory',
+            reference_name=f'{self.app_label}.hivtestinghistory',
             visit_code='T1',
             other_record=NO,
             has_tested=YES,
@@ -1710,7 +1727,7 @@ class TestStatusHelper(TestCase):
         # hivcareadherence
         self.reference_helper.create_for_model(
             report_datetime=subject_visits[1].report_datetime,
-            model='hivcareadherence',
+            reference_name=f'{self.app_label}.hivcareadherence',
             visit_code='T1',
             ever_taken_arv=NO,
             on_arv=NO,
@@ -1736,16 +1753,16 @@ class TestStatusHelper(TestCase):
         self.reference_helper.create_visit(
             report_datetime=report_datetime + relativedelta(years=1), timepoint='T1')
         subject_visits = LongitudinalRefset(
+            name=self.visit_model,
             subject_identifier=self.subject_identifier,
             visit_model=self.visit_model,
-            model=self.visit_model,
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
         # hivresult
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresult',
+            reference_name=f'{self.app_label}.hivresult',
             visit_code='T0',
             hiv_result=POS,
             hiv_result_datetime=report_datetime)
@@ -1753,7 +1770,7 @@ class TestStatusHelper(TestCase):
         # hivresultdocumentation
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresultdocumentation',
+            reference_name=f'{self.app_label}.hivresultdocumentation',
             visit_code='T0',
             result_recorded=NEG,
             result_date=Arrow.fromdate(date(2015, 1, 7)).date(),
@@ -1762,7 +1779,7 @@ class TestStatusHelper(TestCase):
         # hivcareadherence
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivcareadherence',
+            reference_name=f'{self.app_label}.hivcareadherence',
             visit_code='T0',
             ever_taken_arv=NO,
             on_arv=NO,
@@ -1789,16 +1806,16 @@ class TestStatusHelper(TestCase):
         self.reference_helper.create_visit(
             report_datetime=report_datetime + relativedelta(years=1), timepoint='T1')
         subject_visits = LongitudinalRefset(
+            name=self.visit_model,
             subject_identifier=self.subject_identifier,
             visit_model=self.visit_model,
-            model=self.visit_model,
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
         # hivresult
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresult',
+            reference_name=f'{self.app_label}.hivresult',
             visit_code='T0',
             hiv_result=NEG,
             hiv_result_datetime=report_datetime)
@@ -1806,7 +1823,7 @@ class TestStatusHelper(TestCase):
         # hivtestinghistory
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivtestinghistory',
+            reference_name=f'{self.app_label}.hivtestinghistory',
             visit_code='T0',
             other_record=NO,
             has_tested=YES,
@@ -1815,7 +1832,7 @@ class TestStatusHelper(TestCase):
         # hivtestreview
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivtestreview',
+            reference_name=f'{self.app_label}.hivtestreview',
             visit_code='T0',
             recorded_hiv_result=NEG,
             hiv_test_date=(report_datetime - relativedelta(days=10)).date())
@@ -1825,7 +1842,7 @@ class TestStatusHelper(TestCase):
         # hivresult
         self.reference_helper.create_for_model(
             report_datetime=subject_visits[1].report_datetime,
-            model='hivresult',
+            reference_name=f'{self.app_label}.hivresult',
             visit_code='T1',
             hiv_result=POS,
             hiv_result_datetime=subject_visits[1].report_datetime)
@@ -1833,7 +1850,7 @@ class TestStatusHelper(TestCase):
         # hivtestinghistory
         self.reference_helper.create_for_model(
             report_datetime=subject_visits[1].report_datetime,
-            model='hivtestinghistory',
+            reference_name=f'{self.app_label}.hivtestinghistory',
             visit_code='T1',
             other_record=NO,
             has_tested=YES,
@@ -1842,7 +1859,7 @@ class TestStatusHelper(TestCase):
         # hivcareadherence
         self.reference_helper.create_for_model(
             report_datetime=subject_visits[1].report_datetime,
-            model='hivcareadherence',
+            reference_name=f'{self.app_label}.hivcareadherence',
             visit_code='T1',
             ever_taken_arv=NO,
             on_arv=NO,
@@ -1867,16 +1884,16 @@ class TestStatusHelper(TestCase):
         self.reference_helper.create_visit(
             report_datetime=report_datetime + relativedelta(years=1), timepoint='T1')
         subject_visits = LongitudinalRefset(
+            name=self.visit_model,
             subject_identifier=self.subject_identifier,
             visit_model=self.visit_model,
-            model=self.visit_model,
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
         # hivresult
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresult',
+            reference_name=f'{self.app_label}.hivresult',
             visit_code='T0',
             hiv_result=POS,
             hiv_result_datetime=report_datetime)
@@ -1884,7 +1901,7 @@ class TestStatusHelper(TestCase):
         # hivresultdocumentation
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresultdocumentation',
+            reference_name=f'{self.app_label}.hivresultdocumentation',
             visit_code='T0',
             result_recorded=NEG,
             result_date=Arrow.fromdate(date(2015, 1, 7)).date(),
@@ -1893,7 +1910,7 @@ class TestStatusHelper(TestCase):
         # hivcareadherence
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivcareadherence',
+            reference_name=f'{self.app_label}.hivcareadherence',
             visit_code='T0',
             ever_taken_arv=YES,
             on_arv=YES,
@@ -1919,16 +1936,16 @@ class TestStatusHelper(TestCase):
         self.reference_helper.create_visit(
             report_datetime=report_datetime + relativedelta(years=1), timepoint='T1')
         subject_visits = LongitudinalRefset(
+            name=self.visit_model,
             subject_identifier=self.subject_identifier,
             visit_model=self.visit_model,
-            model=self.visit_model,
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
         # hivresult
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresult',
+            reference_name=f'{self.app_label}.hivresult',
             visit_code='T0',
             hiv_result=NEG,
             hiv_result_datetime=report_datetime)
@@ -1936,7 +1953,7 @@ class TestStatusHelper(TestCase):
         # hivtestreview
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivtestreview',
+            reference_name=f'{self.app_label}.hivtestreview',
             visit_code='T0',
             recorded_hiv_result=NEG,
             hiv_test_date=(report_datetime - relativedelta(days=10)).date())
@@ -1944,7 +1961,7 @@ class TestStatusHelper(TestCase):
         # hivtestinghistory
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivtestinghistory',
+            reference_name=f'{self.app_label}.hivtestinghistory',
             visit_code='T0',
             other_record=NO,
             has_tested=YES,
@@ -1955,7 +1972,7 @@ class TestStatusHelper(TestCase):
         # hivresult
         self.reference_helper.create_for_model(
             report_datetime=subject_visits[1].report_datetime,
-            model='hivresult',
+            reference_name=f'{self.app_label}.hivresult',
             visit_code='T1',
             hiv_result=POS,
             hiv_result_datetime=subject_visits[1].report_datetime)
@@ -1963,7 +1980,7 @@ class TestStatusHelper(TestCase):
         # hivtestinghistory
         self.reference_helper.create_for_model(
             report_datetime=subject_visits[1].report_datetime,
-            model='hivtestinghistory',
+            reference_name=f'{self.app_label}.hivtestinghistory',
             visit_code='T1',
             other_record=NO,
             has_tested=YES,
@@ -1972,7 +1989,7 @@ class TestStatusHelper(TestCase):
         # hivcareadherence
         self.reference_helper.create_for_model(
             report_datetime=subject_visits[1].report_datetime,
-            model='hivcareadherence',
+            reference_name=f'{self.app_label}.hivcareadherence',
             visit_code='T1',
             ever_taken_arv=YES,
             on_arv=YES,
@@ -1996,16 +2013,16 @@ class TestStatusHelper(TestCase):
         self.reference_helper.create_visit(
             report_datetime=report_datetime + relativedelta(years=1), timepoint='T1')
         subject_visits = LongitudinalRefset(
+            name=self.visit_model,
             subject_identifier=self.subject_identifier,
             visit_model=self.visit_model,
-            model=self.visit_model,
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
         # hivresult
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivresult',
+            reference_name=f'{self.app_label}.hivresult',
             visit_code='T0',
             hiv_result=IND,
             hiv_result_datetime=report_datetime)
@@ -2013,7 +2030,7 @@ class TestStatusHelper(TestCase):
         # elisaresult
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='elisahivresult',
+            reference_name=f'{self.app_label}.elisahivresult',
             visit_code='T0',
             hiv_result=POS,
             hiv_result_datetime=Arrow.fromdate(date(2015, 11, 4)).datetime)
@@ -2037,16 +2054,16 @@ class TestStatusHelper(TestCase):
         self.reference_helper.create_visit(
             report_datetime=report_datetime + relativedelta(years=1), timepoint='T1')
         subject_visits = LongitudinalRefset(
+            name=self.visit_model,
             subject_identifier=self.subject_identifier,
             visit_model=self.visit_model,
-            model=self.visit_model,
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
         # hivtestinghistory
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivtestinghistory',
+            reference_name=f'{self.app_label}.hivtestinghistory',
             visit_code='T0',
             other_record=YES,
             has_tested=YES,
@@ -2055,7 +2072,7 @@ class TestStatusHelper(TestCase):
         # hivtestreview
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivtestreview',
+            reference_name=f'{self.app_label}.hivtestreview',
             visit_code='T0',
             recorded_hiv_result=POS,
             hiv_test_date=(report_datetime - relativedelta(days=50)).date())
@@ -2063,7 +2080,7 @@ class TestStatusHelper(TestCase):
         # hivcareadherence
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivcareadherence',
+            reference_name=f'{self.app_label}.hivcareadherence',
             visit_code='T0',
             ever_taken_arv=YES,
             on_arv=NO,
@@ -2084,7 +2101,7 @@ class TestStatusHelper(TestCase):
         # hivcareadherence
         self.reference_helper.create_for_model(
             report_datetime=subject_visits[1].report_datetime,
-            model='hivcareadherence',
+            reference_name=f'{self.app_label}.hivcareadherence',
             visit_code='T1',
             ever_taken_arv=YES,
             on_arv=YES,
@@ -2109,16 +2126,16 @@ class TestStatusHelper(TestCase):
         self.reference_helper.create_visit(
             report_datetime=report_datetime + relativedelta(years=1), timepoint='T1')
         subject_visits = LongitudinalRefset(
+            name=self.visit_model,
             subject_identifier=self.subject_identifier,
             visit_model=self.visit_model,
-            model=self.visit_model,
             reference_model_cls=self.reference_model
         ).order_by('report_datetime')
 
         # hivtestinghistory
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivtestinghistory',
+            reference_name=f'{self.app_label}.hivtestinghistory',
             visit_code='T0',
             other_record=YES,
             has_tested=YES,
@@ -2132,7 +2149,7 @@ class TestStatusHelper(TestCase):
         # hivtestreview
         self.reference_helper.create_for_model(
             report_datetime=report_datetime,
-            model='hivtestreview',
+            reference_name=f'{self.app_label}.hivtestreview',
             visit_code='T0',
             recorded_hiv_result=POS,
             hiv_test_date=(report_datetime - relativedelta(days=50)).date())

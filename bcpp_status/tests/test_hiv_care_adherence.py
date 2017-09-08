@@ -24,7 +24,8 @@ class TestHivCareAdherence(ValuesTestCase):
 
     def test_hivcareadherence_values(self):
         self.reference_helper.create(
-            HivCareAdherence.model, self.visits, self.longitudinal_values)
+            reference_name=HivCareAdherence.model,
+            visits=self.visits, longitudinal_values=self.longitudinal_values)
         for visit_code in self.longitudinal_values:
             with self.subTest(visit_code=visit_code):
                 values_obj = HivCareAdherence(
@@ -35,7 +36,8 @@ class TestHivCareAdherence(ValuesTestCase):
 
     def test_hivcareadherence_baseline(self):
         self.reference_helper.create(
-            HivCareAdherence.model, self.visits, self.longitudinal_values)
+            reference_name=HivCareAdherence.model,
+            visits=self.visits, longitudinal_values=self.longitudinal_values)
         values_obj = HivCareAdherence(
             subject_identifier=self.subject_identifier,
             baseline=True)
@@ -48,7 +50,8 @@ class TestHivCareAdherence(ValuesTestCase):
             'ever_taken_arv': (DWTA, 'CharField'),
             'on_arv': (NOT_APPLICABLE, 'CharField')})
         self.reference_helper.create(
-            HivCareAdherence.model, self.visits, self.longitudinal_values)
+            reference_name=HivCareAdherence.model,
+            visits=self.visits, longitudinal_values=self.longitudinal_values)
         values_obj = HivCareAdherence(
             subject_identifier=self.subject_identifier,
             report_datetime=self.visits.get('first'))
@@ -62,7 +65,8 @@ class TestHivCareAdherence(ValuesTestCase):
             'ever_taken_arv': (NO, 'CharField'),
             'on_arv': (DWTA, 'CharField')})
         self.reference_helper.create(
-            HivCareAdherence.model, self.visits, self.longitudinal_values)
+            reference_name=HivCareAdherence.model,
+            visits=self.visits, longitudinal_values=self.longitudinal_values)
         values_obj = HivCareAdherence(
             subject_identifier=self.subject_identifier,
             report_datetime=self.visits.get('first'))
