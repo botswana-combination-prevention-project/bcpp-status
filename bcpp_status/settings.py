@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'bcpp_community.apps.AppConfig',
     'bcpp_visit_schedule.apps.AppConfig',
     'bcpp_reference.apps.AppConfig',
+    'edc_sync.apps.AppConfig',
     'bcpp_status.apps.AppConfig',
 ]
 
@@ -142,5 +143,5 @@ if 'test' in sys.argv:
             return None
 
     MIGRATION_MODULES = DisableMigrations()
-    PASSWORD_HASHERS = ('django.contrib.auth.hashers.MD5PasswordHasher', )
+    PASSWORD_HASHERS = ('django.contrib.auth.hashers.MD5PasswordHasher',)
     DEFAULT_FILE_STORAGE = 'inmemorystorage.InMemoryStorage'
