@@ -3,7 +3,6 @@ import json
 from django.db import models
 from django.db.models.indexes import Index
 
-from edc_base.model_managers import HistoricalRecords
 from edc_base.model_mixins import BaseUuidModel
 from edc_identifier.model_mixins import NonUniqueSubjectIdentifierFieldMixin
 
@@ -27,8 +26,6 @@ class StatusHistory(NonUniqueSubjectIdentifierFieldMixin, BaseUuidModel):
     data = models.TextField()
 
     objects = StatusHistoryManager()
-
-    history = HistoricalRecords()
 
     def __str__(self):
         return f'{self.subject_identifier}, {self.status_date}, {self.timepoint}, created={self.created}'
