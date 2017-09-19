@@ -93,6 +93,7 @@ class StatusHelper:
 
         # attrs matching StatusDBHelper
         self.current_hiv_result = self.current.today_hiv_result
+        self.self_reported_result = self.current.self_reported_result
         self.today_hiv_result = self.current.today_hiv_result
         self.current_arv_evidence = self.current.arv_evidence
         self.baseline_hiv_result = self.baseline.today_hiv_result
@@ -167,6 +168,7 @@ class StatusHelper:
             'today_hiv_result': self.current.today_hiv_result,
             'baseline_hiv_result': self.baseline.today_hiv_result,
             'current_hiv_result': self.current.today_hiv_result,
+            'self_reported_result': self.current.self_reported_result,
             'current_arv_evidence': self.current.arv_evidence,
             'declined': self.declined,
             'defaulter_at_baseline': self.defaulter_at_baseline,
