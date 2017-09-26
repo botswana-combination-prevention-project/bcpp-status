@@ -35,5 +35,7 @@ class Command(BaseCommand):
                 StatusHelper(visit=visit, update_history=True)
             except StatusHelperError as e:
                 sys.stdout.write(f'StatusHelperError for {visit.subject_identifier}. Got {e}')
+            except IndexError as e:
+                sys.stdout.write(f'IndexError for {visit.subject_identifier}. Got {e}')
         except MultipleObjectsReturned:
             pass
