@@ -34,6 +34,6 @@ class Command(BaseCommand):
             try:
                 StatusHelper(visit=visit, update_history=True)
             except StatusHelperError as e:
-                sys.stdout(f'StatusHelperError for {visit.subject_identifier}. Got {e}')
+                sys.stdout.write(f'StatusHelperError for {visit.subject_identifier}. Got {e}')
         except MultipleObjectsReturned:
             pass
