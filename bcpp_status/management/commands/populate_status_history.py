@@ -1,10 +1,11 @@
-from datetime import datetime
-# from bcpp_referral.bcpp_referral_facilities import bcpp_referral_facilities
-from django.apps import apps as django_apps
-from django.core.management.base import BaseCommand
-from bcpp_status.status_helper.status_helper import StatusHelper
-from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
+import sys
+
 from bcpp_status.models import StatusHistory
+from bcpp_status.status_helper.status_helper import StatusHelper, StatusHelperError
+from datetime import datetime
+from django.apps import apps as django_apps
+from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
+from django.core.management.base import BaseCommand
 from tqdm._tqdm import tqdm
 
 
@@ -26,16 +27,13 @@ class Command(BaseCommand):
 
     def get_or_create_history(self, visit=None):
         try:
-            history_obj = StatusHistory.objects.get(
+            StatusHistory.objects.get(
                 subject_identifier=visit.subject_identifier,
                 timepoint=visit.visit_code)
         except ObjectDoesNotExist:
-            StatusHelper(visit=visit, update_history=True)
-            history_obj = StatusHistory.objects.get(
-                subject_identifier=visit.subject_identifier,
-                timepoint=visit.visit_code)
+            try:
+                StatusHelper(visit=visit, update_history=True)
+            except StatusHelperError as e:
+                sys.stdout(f'StatusHelperError for {visit.subject_identifier}. Got {e}')
         except MultipleObjectsReturned:
-            history_obj = StatusHistory().objects.filter(
-                subject_identifier=visit.subject_identifier,
-                timepoint=visit.visit_code).order_by('created').last()
-        return history_obj
+            pass
